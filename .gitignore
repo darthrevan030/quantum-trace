@@ -1,0 +1,16 @@
+*.db
+*.sqlite3
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+.env
+__pycache__/
+*.py[cod]
+.venv/
+.env
+dist/
+build/
+*.egg-info/
+cbom_*.json
