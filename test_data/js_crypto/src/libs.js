@@ -1,0 +1,9 @@
+const CryptoJS = require('crypto-js');
+const nacl = require('tweetnacl');
+const bcrypt = require('bcrypt');
+const { ml_kem768 } = require('@noble/post-quantum/ml-kem');
+const legacy = CryptoJS.TripleDES.encrypt(msg, pass);
+const md = CryptoJS.MD5(msg);
+const box = nacl.box(msg, nonce, theirPk, mySk);
+const hashed = await bcrypt.hash(pw, 12);
+const { cipherText, sharedSecret } = ml_kem768.encapsulate(publicKey);

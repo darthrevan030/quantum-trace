@@ -1,0 +1,101 @@
+{
+  "language": "go",
+  "extensions": {".go": "go"},
+  "commentPrefixes": ["//", "/*", "*"],
+  "rules": [
+    {
+      "id": "go-rsa-generate",
+      "regex": "\\brsa\\.GenerateKey\\([^,\\n]*,\\s*(\\d+)?",
+      "algorithm": "RSA",
+      "keySizeGroup": 1
+    },
+    {
+      "id": "go-rsa-operation",
+      "regex": "\\brsa\\.(?:EncryptOAEP|EncryptPKCS1v15|DecryptOAEP|DecryptPKCS1v15|SignPKCS1v15|SignPSS|VerifyPKCS1v15|VerifyPSS)\\(",
+      "algorithm": "RSA"
+    },
+    {
+      "id": "go-ecdsa",
+      "regex": "\\becdsa\\.(?:GenerateKey|Sign|SignASN1|Verify|VerifyASN1)\\(",
+      "algorithm": "ECDSA",
+      "curvePattern": "elliptic\\.(P224|P256|P384|P521)\\(\\)",
+      "purpose": "signature"
+    },
+    {
+      "id": "go-ecdh",
+      "regex": "\\becdh\\.(P256|P384|P521|X25519)\\(\\)",
+      "algorithm": "{1}",
+      "purpose": "keyExchange"
+    },
+    {
+      "id": "go-ed25519",
+      "regex": "\\bed25519\\.(?:GenerateKey|Sign|Verify|NewKeyFromSeed)\\(",
+      "algorithm": "Ed25519"
+    },
+    {
+      "id": "go-curve25519",
+      "regex": "\\bcurve25519\\.(?:X25519|ScalarMult|ScalarBaseMult)\\b",
+      "algorithm": "X25519"
+    },
+    {
+      "id": "go-aes",
+      "regex": "\\baes\\.NewCipher\\(",
+      "algorithm": "AES",
+      "purpose": "encryption"
+    },
+    {
+      "id": "go-des",
+      "regex": "\\bdes\\.(NewCipher|NewTripleDESCipher)\\(",
+      "algorithmMap": {"newcipher": "DES", "newtripledescipher": "3DES"},
+      "purpose": "encryption"
+    },
+    {
+      "id": "go-rc4",
+      "regex": "\\brc4\\.NewCipher\\(",
+      "algorithm": "RC4",
+      "purpose": "encryption"
+    },
+    {
+      "id": "go-chacha20",
+      "regex": "\\bchacha20poly1305\\.NewX?\\(",
+      "algorithm": "ChaCha20",
+      "purpose": "encryption"
+    },
+    {
+      "id": "go-hash",
+      "regex": "\\b(md5|sha1|sha256|sha512)\\.(?:New\\w*|Sum\\w*)\\(",
+      "algorithm": "{1}",
+      "purpose": "hash"
+    },
+    {
+      "id": "go-sha3",
+      "regex": "\\bsha3\\.(?:New|Sum)(224|256|384|512)\\(",
+      "algorithm": "sha3-{1}",
+      "purpose": "hash"
+    },
+    {
+      "id": "go-hmac",
+      "regex": "\\bhmac\\.New\\(\\s*(md5|sha1|sha256|sha512)\\.New\\b",
+      "algorithm": "hmac-{1}",
+      "purpose": "hash"
+    },
+    {
+      "id": "go-tls-version",
+      "regex": "\\btls\\.(VersionTLS1[0-3]|VersionSSL30)\\b",
+      "algorithmMap": {"versiontls10": "TLSv1", "versiontls11": "TLSv1.1", "versiontls12": "TLSv1.2", "versiontls13": "TLSv1.3", "versionssl30": "SSLv3"},
+      "purpose": "protocol"
+    },
+    {
+      "id": "go-tls-curve",
+      "regex": "\\btls\\.(CurveP256|CurveP384|CurveP521|X25519|X25519MLKEM768)\\b",
+      "algorithmMap": {"curvep256": "P-256", "curvep384": "P-384", "curvep521": "P-521", "x25519": "X25519", "x25519mlkem768": "X25519MLKEM768"},
+      "purpose": "keyExchange"
+    },
+    {
+      "id": "go-post-quantum",
+      "regex": "\\b(mlkem\\d*|kyber\\d*|mldsa\\d*|dilithium\\d?|sphincs\\w*|slhdsa\\w*)\\b",
+      "flags": "i",
+      "algorithm": "{1}"
+    }
+  ]
+}

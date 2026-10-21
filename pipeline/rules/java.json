@@ -1,0 +1,69 @@
+{
+  "language": "java",
+  "extensions": {".java": "java", ".kt": "kotlin"},
+  "commentPrefixes": ["//", "/*", "*"],
+  "rules": [
+    {
+      "id": "java-keypair-generator",
+      "regex": "\\bKeyPairGenerator\\.getInstance\\(\\s*\"([\\w-]+)\"",
+      "algorithm": "{1}",
+      "lookahead": 3,
+      "keySizePattern": "\\.initialize\\(\\s*(\\d+)",
+      "curvePattern": "ECGenParameterSpec\\(\\s*\"([\\w-]+)\""
+    },
+    {
+      "id": "java-cipher",
+      "regex": "\\bCipher\\.getInstance\\(\\s*\"([^\"/]+)(?:/([^\"/]+))?",
+      "algorithm": "{1}-{2}",
+      "purpose": "encryption"
+    },
+    {
+      "id": "java-key-generator",
+      "regex": "\\bKeyGenerator\\.getInstance\\(\\s*\"([\\w-]+)\"",
+      "algorithm": "{1}",
+      "lookahead": 3,
+      "keySizePattern": "\\.init\\(\\s*(\\d+)"
+    },
+    {
+      "id": "java-message-digest",
+      "regex": "\\bMessageDigest\\.getInstance\\(\\s*\"([\\w-]+)\"",
+      "algorithm": "{1}",
+      "purpose": "hash"
+    },
+    {
+      "id": "java-signature",
+      "regex": "\\bSignature\\.getInstance\\(\\s*\"(?:\\w+?with)?([\\w-]+)\"",
+      "algorithm": "{1}",
+      "purpose": "signature"
+    },
+    {
+      "id": "java-mac",
+      "regex": "\\bMac\\.getInstance\\(\\s*\"([\\w-]+)\"",
+      "algorithm": "{1}",
+      "purpose": "hash"
+    },
+    {
+      "id": "java-key-agreement",
+      "regex": "\\bKeyAgreement\\.getInstance\\(\\s*\"([\\w-]+)\"",
+      "algorithm": "{1}",
+      "purpose": "keyExchange"
+    },
+    {
+      "id": "java-secret-key-factory",
+      "regex": "\\bSecretKeyFactory\\.getInstance\\(\\s*\"([\\w-]+)\"",
+      "algorithm": "{1}"
+    },
+    {
+      "id": "java-ssl-context",
+      "regex": "\\bSSLContext\\.getInstance\\(\\s*\"([\\w.]+)\"",
+      "algorithm": "{1}",
+      "dropUnknown": true,
+      "purpose": "protocol"
+    },
+    {
+      "id": "java-post-quantum",
+      "regex": "\\b(MLKEM|ML-KEM|Kyber|Dilithium|MLDSA|ML-DSA|SPHINCSPlus|SLHDSA|SLH-DSA|Falcon)\\w*",
+      "algorithm": "{1}"
+    }
+  ]
+}
