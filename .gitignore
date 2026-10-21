@@ -14,3 +14,4 @@ dist/
 build/
 *.egg-info/
 cbom_*.json
+input_files/

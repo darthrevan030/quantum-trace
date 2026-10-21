@@ -1,2 +1,0 @@
-scapy>=2.6,<3
-cryptography>=44

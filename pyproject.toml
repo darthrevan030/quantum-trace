@@ -5,8 +5,3 @@ requires-python = ">=3.11"
 dependencies = [
     "cryptography>=44",
 ]
-
-[dependency-groups]
-network = [
-    "scapy>=2.6,<3",
-]
