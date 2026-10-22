@@ -34,6 +34,24 @@
       "purpose": "hash"
     },
     {
+      "id": "js-node-hash-constant",
+      "regex": "\\b(?:createHash|crypto\\.hash)\\(\\s*([A-Za-z_$][\\w$.]*)\\s*[,)]",
+      "algorithm": "{1}",
+      "constant": true,
+      "unresolvedLabel": "Hash (runtime-selected)",
+      "reason": "Hash algorithm is not a literal or a same-file constant; review the value passed here.",
+      "purpose": "hash"
+    },
+    {
+      "id": "js-node-hmac-constant",
+      "regex": "\\bcreateHmac\\(\\s*([A-Za-z_$][\\w$.]*)\\s*,",
+      "algorithm": "hmac-{1}",
+      "constant": true,
+      "unresolvedLabel": "HMAC (runtime-selected)",
+      "reason": "HMAC hash is not a literal or a same-file constant; review the value passed here.",
+      "purpose": "hash"
+    },
+    {
       "id": "js-node-keypair",
       "regex": "\\bgenerateKeyPair(?:Sync)?\\(\\s*['\"`]([\\w-]+)['\"`]",
       "algorithm": "{1}",
@@ -140,6 +158,34 @@
       "purpose": "signature"
     },
     {
+      "id": "js-jwt-algorithms-constant",
+      "regex": "\\balgorithms\\s*:\\s*([A-Za-z_$][\\w$]*)(?![\\w$.(\\[])",
+      "algorithm": "{1}",
+      "constant": true,
+      "dropUnknown": true,
+      "label": "JWT {item}",
+      "purpose": "signature"
+    },
+    {
+      "id": "js-jwt-algorithm-ternary",
+      "regex": "\\balg(?:orithm)?\\s*=\\s*[^;\\n]*?\\?\\s*((?:'[^'\\n]*'|\"[^\"\\n]*\"|`[^`\\n]*`)\\s*:\\s*(?:'[^'\\n]*'|\"[^\"\\n]*\"|`[^`\\n]*`))",
+      "algorithm": "{1}",
+      "split": "[\\s:'\"`]+",
+      "dropUnknown": true,
+      "label": "JWT {item}",
+      "purpose": "signature"
+    },
+    {
+      "id": "js-jwt-call-dynamic",
+      "regex": "\\b(?:jws|jwt|jsonwebtoken)\\.(?:sign|verify)\\(",
+      "algorithm": "?",
+      "fileRequires": "['\"`](?:jws|jsonwebtoken)['\"`]",
+      "fileLacks": "\\b(?:HS|RS|ES|PS)(?:256|384|512)\\b|\\bEdDSA\\b",
+      "label": "JWT/JWS call (algorithm not visible)",
+      "reason": "A JWT/JWS library signs or verifies here but no algorithm appears in the file; review the key and algorithm configuration.",
+      "purpose": "signature"
+    },
+    {
       "id": "js-cryptojs",
       "regex": "\\bCryptoJS\\.(AES|DES|TripleDES|RC4|RC4Drop|Rabbit|MD5|SHA1|SHA224|SHA256|SHA384|SHA512|RIPEMD160|HmacMD5|HmacSHA1|HmacSHA256|HmacSHA384|HmacSHA512|PBKDF2)\\b",
       "algorithm": "{1}"
@@ -229,6 +275,15 @@
       "classifyAs": "RSA",
       "label": "Mojaloop JWS (RS256/ES256)",
       "reason": "@mojaloop/sdk-standard-components signs FSPIOP messages with RS256, or ES256 for EC keys (jwsSigner.js); both are vulnerable to Shor's algorithm.",
+      "purpose": "signature"
+    },
+    {
+      "id": "js-mojaloop-jws-config",
+      "regex": "\\bjwsSigningKey\\s*:",
+      "algorithm": "RS256",
+      "classifyAs": "RSA",
+      "label": "Mojaloop JWS (RS256/ES256)",
+      "reason": "A JWS signing key is handed to @mojaloop/sdk-standard-components, which signs FSPIOP messages with RS256, or ES256 for EC keys; both are vulnerable to Shor's algorithm.",
       "purpose": "signature"
     },
     {

@@ -163,7 +163,8 @@ Rule fields:
 - `algorithmMap`, `algorithmPattern`: alternative ways to resolve the algorithm.
 - `keySizeGroup`/`keySizePattern`, `curveGroup`/`curvePattern`: where to read parameters from.
 - `lookahead` and `windowEnd`: let a rule read multi-line arguments.
-- Others: `split`, `label`, `classifyAs`, `fileRequires`, `dropUnknown`, `flags`.
+- Others: `split`, `label`, `classifyAs`, `fileRequires`, `fileLacks` (skip the rule when the file matches), `dropUnknown`, `flags`.
+- `constant`: group 1 is an identifier; it resolves to the string(s) of a same-file `const NAME = 'x'` or `['x', 'y']`, and an unresolved name becomes UNKNOWN, labelled by `unresolvedLabel`.
 
 [pipeline/rules/javascript.json](pipeline/rules/javascript.json) uses all of them.
 

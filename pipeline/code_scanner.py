@@ -18,6 +18,8 @@ RULES_DIR = Path(__file__).with_name("rules")
 TEST_PATH = re.compile(r"(^|/)(tests?|__tests__|spec|specs|fixtures?|test_data)/|\.(test|spec)\.\w+$|_test\.(go|py)$|(^|/)test_[^/]*\.py$")
 EC_FAMILY = {"EC", "ECDSA", "ECDH"}
 GROUP = re.compile(r"\{(\d+|item)\}")
+CONSTANT = re.compile(r"\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(\[[^\]]*\]|['\"`][\w-]+['\"`])")
+QUOTED = re.compile(r"['\"`]([\w-]+)['\"`]")
 
 
 def load_rules(directory=RULES_DIR):
@@ -29,7 +31,7 @@ def load_rules(directory=RULES_DIR):
         for rule in ruleset["rules"]:
             flags = re.IGNORECASE if "i" in rule.get("flags", "") else 0
             rule["regex"] = re.compile(rule["regex"], flags)
-            for key in ("algorithmPattern", "keySizePattern", "curvePattern", "hashPattern", "fileRequires"):
+            for key in ("algorithmPattern", "keySizePattern", "curvePattern", "hashPattern", "fileRequires", "fileLacks"):
                 if key in rule:
                     rule[key] = re.compile(rule[key], re.IGNORECASE if key == "algorithmPattern" else 0)
         rulesets.append(ruleset)
@@ -58,8 +60,17 @@ def _search(pattern, window):
     return next((group for group in found.groups() if group), None) if found else None
 
 
-def _resolve(rule, match, window):
+def _constants(text):
+    """Map same-file `const NAME = 'x'` / `const NAME = ['x', 'y']` to their string values."""
+    return {name: QUOTED.findall(value) for name, value in CONSTANT.findall(text)}
+
+
+def _resolve(rule, match, window, constants):
     """Yield (raw algorithm text, label template item) for one match."""
+    if rule.get("constant"):
+        for value in constants.get(match.group(1)) or ["?"]:
+            yield (rule["algorithm"].replace("{1}", value) if value != "?" else "?"), value
+        return
     if "algorithmMap" in rule:
         yield rule["algorithmMap"].get((match.group(1) or "").lower(), "?"), None
         return
@@ -100,7 +111,7 @@ def _finding(rule, match, window, raw, item, relative):
         assessment = {"risk": "UNKNOWN", "threat": "Unknown",
                       "reason": rule.get("reason", "Algorithm could not be determined from the code."),
                       "suggestion": "Review the algorithm used here."}
-        name = rule.get("label") or raw
+        name = rule.get("unresolvedLabel") or rule.get("label") or raw
         key = ("?", rule["id"])
     else:
         target = rule.get("classifyAs") or info["algorithm"]
@@ -134,9 +145,12 @@ def scan_file(path, relative, ruleset, language):
         offset += len(content) + 1
     line_ends = [start + len(content) for start, content in zip(line_starts, lines)]
     comments = tuple(ruleset.get("commentPrefixes", ()))
+    constants = _constants(text)
     seen, components = set(), []
     for rule in ruleset["rules"]:
         if "fileRequires" in rule and not rule["fileRequires"].search(text):
+            continue
+        if "fileLacks" in rule and rule["fileLacks"].search(text):
             continue
         for match in rule["regex"].finditer(text):
             index = bisect_right(line_starts, match.start()) - 1
@@ -144,11 +158,13 @@ def scan_file(path, relative, ruleset, language):
             if comments and content.startswith(comments):
                 continue
             window = _window(text, match, rule, line_ends, index)
-            for raw, item in _resolve(rule, match, window):
+            for raw, item in _resolve(rule, match, window, constants):
                 result = _finding(rule, match, window, raw, item, relative)
                 if result is None or (index, result[0]) in seen:
                     continue
                 seen.add((index, result[0]))
+                # Lines the rule's own window covered (e.g. namedCurve inside generateKeyPair({...})) are the same finding.
+                seen.update((covered, result[0]) for covered in range(index + 1, bisect_right(line_starts, match.end() + len(window))))
                 component = result[1]
                 component["cryptoProperties"].update(assetType="code-primitive", language=language)
                 components.append({
@@ -163,16 +179,18 @@ def scan_file(path, relative, ruleset, language):
 
 
 def summarize(components, scanned_files, languages):
-    # The score weights (1.0 / 0.7 / 0.4) are a presentation heuristic, not a standard; the risk counts are the evidence.
     counts = Counter(c["quantumRiskAssessment"]["tier"] for c in components)
-    total = len(components)
-    score = round((counts["CRITICAL"] + 0.7 * counts["HIGH"] + 0.4 * counts["MEDIUM"]) / max(total, 1) * 100, 2)
+    # The score weights (1.0 / 0.7 / 0.4) are a presentation heuristic, not a standard; the risk counts are the evidence.
+    # It covers production code only: test fixtures generate throwaway keys and would otherwise dominate it.
+    production = Counter(c["quantumRiskAssessment"]["tier"] for c in components if c["cryptoProperties"].get("context") != "test")
+    score = round((production["CRITICAL"] + 0.7 * production["HIGH"] + 0.4 * production["MEDIUM"])
+                  / max(sum(production.values()), 1) * 100, 2)
     return {
         "source": "Static Code Cryptographic Inventory (SAST)",
         "scannedFiles": scanned_files,
         "languages": dict(sorted(languages.items())),
         "quantumRiskSummary": {
-            "totalFindings": total,
+            "totalFindings": len(components),
             "riskCounts": {risk: counts[risk] for risk in RISKS},
             "codeQuantumRiskScore": f"{score}%",
         },
