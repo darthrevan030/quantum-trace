@@ -14,7 +14,6 @@ test_data/
   expected/       recorded scanner results, one file per fixture
 ```
 
-
 ## js_crypto/
 
 Covers the JavaScript/TypeScript rules: Node `crypto`, WebCrypto, TLS options, JWT, crypto-js, tweetnacl, noble, Mojaloop JWS and `package.json` dependencies. It also contains negative controls: a commented-out call, a minified bundle, a `.d.ts` file, an unrelated number and a non-crypto dependency. `tests/scanner/test_code_scanner.py` asserts the exact set of 31 findings. The file is maintained by hand.
