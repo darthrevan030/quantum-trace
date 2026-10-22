@@ -183,7 +183,7 @@ def _reach(nodes, roots):
         key = queue.pop(0)
         for name in nodes[key]["deps"]:
             child = _resolve(nodes, key, name)
-            if child:
+            if child and child not in parents:
                 parents[child] = key
                 queue.append(child)
     return parents
