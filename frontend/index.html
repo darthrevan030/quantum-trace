@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f3ee">
+    <meta name="description" content="Explore your cryptographic inventory and prepare files and repositories for quantum risk analysis.">
+    <title>QuantumTrace · Input sources</title>
+    <script src="theme.js"></script>
+    <link rel="preload" href="fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="app.mjs"></script>
+  </head>
+  <body>
+    <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+      <symbol id="icon-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"/><path d="m8 12 3 3 5-6"/></symbol>
+      <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 4v16h17M8 15v-4m5 4V6m5 9v-7"/></symbol>
+      <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+      <symbol id="icon-network" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 8v4H5v4m7-4h7v4"/></symbol>
+      <symbol id="icon-code" viewBox="0 0 24 24"><path d="m7 7-5 5 5 5m10-10 5 5-5 5M14 4l-4 16"/></symbol>
+      <symbol id="icon-cloud" viewBox="0 0 24 24"><path d="M6 18a5 5 0 0 1-1-10 7 7 0 0 1 13 1 4.5 4.5 0 0 1 0 9Z"/></symbol>
+      <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
+      <symbol id="icon-alert" viewBox="0 0 24 24"><path d="m12 3 10 18H2zM12 9v5m0 3v1"/></symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
+      <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7V4h6l3 3h9v13H3Z"/></symbol>
+      <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/></symbol>
+      <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+    </defs></svg>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar">
+      <svg class="sidebar-traces" viewBox="0 0 232 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs><g id="sidebar-circuits" fill="none">
+          <path pathLength="100" d="M24 -20V150L72 198V422L32 462V716L92 776V1020"/>
+          <path pathLength="100" d="M124 -20V94L178 148V350L120 408V650L170 700V1020"/>
+          <path pathLength="100" d="M210 -20V268L188 290V520L220 552V814L146 888V1020"/>
+        </g></defs>
+        <use class="sidebar-trace-paths" href="#sidebar-circuits"/>
+        <use class="sidebar-trace-pulses" href="#sidebar-circuits"/>
+        <g id="sidebar-circuit-nodes" class="sidebar-trace-nodes"><circle cx="72" cy="198" r="2"/><circle cx="120" cy="408" r="2"/><circle cx="32" cy="716" r="2"/><circle cx="170" cy="700" r="2"/><circle cx="146" cy="888" r="2"/></g>
+      </svg>
+      <a class="brand" href="#/inputs"><span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#icon-shield"/></svg></span><span>QuantumTrace</span></a>
+      <p class="nav-label">WORKSPACE</p>
+      <nav aria-label="Main navigation">
+        <a href="#/inputs" class="nav-link" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg> Input sources</a>
+        <a href="#/analysis" class="nav-link"><svg class="icon" aria-hidden="true"><use href="#icon-chart"/></svg> Risk analysis</a>
+      </nav>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><div class="breadcrumb"><span class="header-product">QuantumTrace</span><span class="slash">/</span><strong id="page-name">Input sources</strong></div><div class="header-actions"><label class="mock-account-control" for="mock-account"><span>Mock account</span><select id="mock-account" aria-describedby="mock-account-note"></select></label><button id="theme-toggle" class="icon-button" type="button" aria-label="Switch color theme"><svg class="icon theme-moon" aria-hidden="true"><use href="#icon-moon"/></svg><svg class="icon theme-sun" aria-hidden="true"><use href="#icon-sun"/></svg></button></div></header>
+      <main id="main" tabindex="-1">
+        <section id="overview" data-page="analysis" aria-labelledby="page-title" hidden>
+          <div class="page-heading"><div><p class="eyebrow">WORKSPACE / CRYPTOGRAPHIC POSTURE</p><h1 id="page-title" tabindex="-1">Risk overview</h1></div><a class="button primary" href="#/inputs"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg> Add source</a></div>
+          <div class="workspace-scope panel"><div class="scope-control"><label for="workspace-source">Repository / source</label><select id="workspace-source" aria-describedby="source-status"></select></div><div class="scope-message"><p id="source-status" role="status"></p><small>Metrics, charts, and report views follow this selection.</small></div><button id="retry-source" class="button secondary" hidden>Retry connection</button><button id="remove-source" class="button subtle" disabled>Remove from view</button></div>
+          <div id="report-switcher" class="report-switcher" role="group" aria-label="Select report"></div>
+          <div class="dataset-line"><span class="status-dot"></span><span id="dataset-status" role="status">Loading saved sources…</span><span class="sample-label" data-report-origin>Source analysis</span></div>
+          <div id="verdict-banner" class="verdict-banner" role="status" hidden><span class="eyebrow">QUANTUM-SAFETY VERDICT</span><strong id="verdict-text"></strong><p id="verdict-description"></p></div>
+          <div class="metrics" aria-label="Report summary">
+            <article class="metric"><span id="total-label">Total findings</span><strong id="total-count">—</strong><p>Discovered in this report</p><svg class="icon metric-icon" aria-hidden="true"><use href="#icon-code"/></svg></article>
+            <article class="metric critical-metric"><span>Critical risk</span><strong id="critical-count">—</strong><p>Prioritize for review</p><svg class="icon metric-icon" aria-hidden="true"><use href="#icon-alert"/></svg></article>
+            <article class="metric safe-metric"><span id="safe-label">Safe findings</span><strong id="safe-count">—</strong><p>Rated safe in this report</p><svg class="icon metric-icon" aria-hidden="true"><use href="#icon-shield"/></svg></article>
+            <article class="metric"><span>Needs review</span><strong id="unknown-count">—</strong><p>Unknown overall risk</p><svg class="icon metric-icon" aria-hidden="true"><use href="#icon-info"/></svg></article>
+          </div>
+        </section>
+        <section id="visualizations" data-page="analysis" aria-labelledby="charts-title" hidden>
+          <div class="section-heading"><div><p class="eyebrow">01 / EXPOSURE &amp; COVERAGE</p><h2 id="charts-title">Cryptographic landscape</h2><p>Risk distribution and algorithm usage across this source.</p></div><label class="risk-filter">Report types <select id="chart-scope"><option value="all">All reports in this source</option></select></label></div>
+          <div class="chart-status-line"><p id="chart-status" role="status">Loading report visualizations…</p><button id="retry-charts" class="button secondary" hidden>Retry reports</button></div>
+          <div id="chart-content" class="chart-grid" hidden>
+            <article class="panel chart-card risk-panel"><div class="chart-heading"><h3 id="donut-title">Files represented in reports</h3><label class="sr-only" for="risk-basis">Count risk by</label><select id="risk-basis"><option value="files">Source files</option><option value="findings">Individual findings</option></select></div>
+              <div class="donut-layout"><div id="risk-donut" class="risk-donut" aria-hidden="true"><div class="donut-hole"><strong id="donut-total">0</strong><span id="donut-unit">source files</span></div></div><ul id="risk-legend" class="risk-legend" aria-label="Risk percentages and counts"></ul></div>
+              <p id="risk-chart-summary" class="sr-only"></p><p id="risk-chart-empty" class="chart-empty" hidden>No reported data for this scope.</p><details class="chart-method"><summary>How risk is counted</summary><p id="risk-basis-note" class="chart-note"></p></details>
+            </article>
+            <div class="panel algorithm-panel">
+            <article class="chart-card algorithm-chart"><div class="chart-heading"><h3>Encryption types</h3><span class="sample-label">Occurrences</span></div><p class="chart-description">Algorithm, key size, and mode where recorded.</p><ul id="bars-encryption" class="bar-chart" aria-label="Encryption counts"></ul><p id="empty-encryption" class="chart-empty" hidden>No encryption algorithms in these reports.</p><p id="coverage-encryption" class="chart-note"></p></article>
+            <article class="chart-card algorithm-chart"><div class="chart-heading"><h3>Key-exchange types</h3><span class="sample-label">Occurrences</span></div><p class="chart-description">Hybrid exchanges count once as a combined construction.</p><ul id="bars-keyExchange" class="bar-chart" aria-label="Key-exchange counts"></ul><p id="empty-keyExchange" class="chart-empty" hidden>No key-exchange algorithms in these reports.</p><p id="coverage-keyExchange" class="chart-note"></p></article>
+            </div>
+            <article class="panel chart-card catalog-chart"><div class="chart-heading"><h3>All detected algorithms</h3><span class="sample-label">Occurrences</span></div><p class="chart-description">Every algorithm label as detected, including signatures, hashes and dependencies.</p><ul id="bars-other" class="bar-chart" aria-label="Algorithm counts"></ul><p id="empty-other" class="chart-empty" hidden>No algorithm labels in these reports.</p><p id="coverage-other" class="chart-note"></p></article>
+          </div>
+        </section>
+        <section id="inputs" data-page="inputs" aria-labelledby="inputs-title">
+          <div class="page-heading"><div><p class="eyebrow">WORKSPACE / INPUT SOURCES</p><h1 id="inputs-title" tabindex="-1">Input sources</h1><p class="subtitle">Upload files or folders, or import a GitHub or GitLab repository. Analysis starts automatically.</p></div></div>
+          <p id="mock-account-note" class="field-help">Mock accounts keep separate source lists in this browser. Pre-existing sources belong to Alex Morgan. This is a demo account switcher.</p>
+          <div class="source-grid">
+            <div class="panel upload-panel"><div class="card-heading"><span class="step">01</span><h3>Upload files or folders</h3><span class="muted">Local files</span></div>
+              <div id="drop-zone" class="drop-zone"><span class="upload-icon"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></span><h4>Drop files or folders to analyze</h4><p>Source code, package manifests, or project archives</p><label class="button secondary file-picker">Browse files<input id="file-input" type="file" multiple></label> <label class="button secondary file-picker">Browse folder<input id="folder-input" type="file" webkitdirectory multiple></label><span class="drop-note">Each upload creates one source and preserves nested file paths. Up to 2,000 files and 50 MiB.</span></div>
+            </div>
+            <div class="panel repo-panel"><div class="card-heading"><span class="step">02</span><h3>Import a repository</h3><span class="muted">GitHub / GitLab</span></div>
+              <form id="repo-form" novalidate><label for="repo-url">Repository URL</label><div class="repo-field"><svg class="icon" aria-hidden="true"><use href="#icon-code"/></svg><input id="repo-url" type="url" placeholder="https://github.com/team/project" aria-describedby="repo-help repo-error" required></div><p id="repo-help" class="field-help">Paste an HTTPS repository URL from GitHub or GitLab.</p><p id="repo-error" class="field-error" role="alert"></p><button class="button secondary" type="submit">Add repository <span aria-hidden="true">↗</span></button></form>
+              <div class="destination"><svg class="icon" aria-hidden="true"><use href="#icon-folder"/></svg><div>Clone destination <code>input_files/</code><small>Public repositories are analyzed automatically.</small></div></div>
+            </div>
+          </div>
+          <div class="source-library panel"><div class="library-heading"><h3>Added sources <span id="added-source-count" class="count">0</span></h3><div class="library-actions"><span id="workspace-owner"></span><button id="remove-all-sources" class="button subtle" type="button" disabled>Remove all</button></div></div><ul id="source-list" aria-label="Added repositories and file collections"></ul><p id="sources-empty" class="queue-empty">Add a repository or drop files to create your first source. Your analysis will appear here.</p><p class="library-note">Remove hides a source from this account’s view. Saved files and analysis records are kept. Each file or folder selection is one source.</p></div>
+          <p id="input-notice" class="notice" role="status" aria-live="polite"></p><button id="retry-sources" class="button secondary" hidden>Retry connection</button>
+        </section>
+        <section id="inventory" data-page="analysis" aria-labelledby="inventory-title" hidden>
+          <div class="section-heading"><div><p class="eyebrow">02 / FINDINGS REGISTER</p><div class="inline-heading"><h2 id="inventory-title">Cryptographic inventory</h2><span class="sample-label" data-report-origin>Source analysis</span></div><p id="inventory-description">Cryptography found in source code and dependency manifests.</p></div><button id="export-report" class="button secondary" title="Export all reports for the selected source as CycloneDX 1.7 JSON" disabled>Export source CBOM <span aria-hidden="true">↓</span></button> <button id="export-markdown" class="button secondary" title="Download the quantum-safety report for the selected source as Markdown" disabled>Export report <span aria-hidden="true">↓</span></button></div>
+          <div class="panel inventory-panel"><div class="inventory-toolbar"><label class="search-field"><svg class="icon" aria-hidden="true"><use href="#icon-search"/></svg><input id="search" type="search" aria-label="Search report findings" placeholder="Search files, algorithms, or code…"></label><div class="inventory-filters"><label id="source-filter-label" class="risk-filter" hidden><span id="source-filter-name">Language</span><select id="source-filter"></select></label><label class="risk-filter">Overall risk <select id="risk-filter"><option value="ALL">All levels</option><option value="CRITICAL">Critical</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option><option value="SAFE">Safe</option><option value="UNKNOWN">Unknown</option></select></label></div></div>
+            <div id="risk-summary" class="risk-summary" aria-label="Risk distribution"></div>
+            <p id="report-policy" class="report-policy"></p>
+            <div id="report-error" class="report-error" role="alert" hidden><p id="report-error-message"></p><button id="retry-report" class="button secondary">Retry loading</button></div>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Report risk assessments"><table><caption class="sr-only">Findings and risk assessments</caption><thead><tr id="report-columns"></tr></thead><tbody id="sessions"></tbody></table></div>
+            <p id="no-results" class="queue-empty" hidden>No findings match these filters, or this report is empty.</p><div class="table-footer"><span id="result-count" role="status">Loading report…</span><span>Click a finding to inspect its evidence <span aria-hidden="true">↗</span></span></div>
+          </div>
+        </section>
+        <footer class="page-footer"><span>QuantumTrace</span><span data-page="analysis" hidden>Report: <code id="report-file">Application code</code></span></footer>
+      </main>
+    </div>
+    <dialog id="session-dialog" aria-labelledby="detail-title"><div class="dialog-heading"><div><p id="detail-kind" class="eyebrow">SCANNER FINDING</p><h2 id="detail-title"></h2></div><button id="close-dialog" class="button subtle" aria-label="Close finding details">×</button></div><div id="session-detail"></div></dialog>
+  </body>
+</html>
