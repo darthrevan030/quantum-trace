@@ -125,13 +125,16 @@ class ApiTest(unittest.TestCase):
 
     def test_upload_scans_code_and_isolates_sources(self):
         client = str(uuid.uuid4())
-        files = [('test.py', b'RSA.generate(2048)\n'), ('network.pcap', b'\xd4\xc3\xb2\xa1 not scanned on main'),
-                 ('package.json', b'{"dependencies": {"node-rsa": "^1"}}')]
+        files = [('test.py', b'RSA.generate(2048)\n'), ('network.pcap', (ROOT / 'test_data/network/hybrid_safe_tls.pcap').read_bytes()),
+                 ('broken.pcap', b'\xd4\xc3\xb2\xa1 truncated capture'), ('package.json', b'{"dependencies": {"node-rsa": "^1"}}')]
         status, source = self.upload(files, client)
         self.assertEqual(status, 202)
         result = self.complete(source)
         self.assertEqual(result['status'], 'ready', result.get('error'))
-        self.assertEqual(set(result['reports']), {'code'})
+        self.assertEqual(set(result['reports']), {'code', 'network'})
+        # One unreadable capture is skipped and recorded; it does not sink the rest of the analysis.
+        self.assertEqual([c['source'] for c in result['reports']['network']['components']], ['network.pcap'])
+        self.assertEqual(result['reports']['network']['metadata']['unreadableCaptures'], ['broken.pcap'])
         self.assertEqual([(c['source'], c['cryptoProperties']['detectedAlgorithm']) for c in result['reports']['code']['components']],
                          [('package.json', 'RSA via node-rsa'), ('test.py', 'RSA-2048')])
         self.assertEqual(self.upload(files, client)[1]['id'], source['id'])

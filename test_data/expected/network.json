@@ -1,0 +1,44 @@
+{
+  "description": "Expected output of the current QuantumTrace scanners; not a security certification.",
+  "kind": "network",
+  "fixture": "network",
+  "totalFindings": 6,
+  "riskCounts": {
+    "CRITICAL": 3,
+    "MEDIUM": 1,
+    "SAFE": 1,
+    "UNKNOWN": 1
+  },
+  "findings": [
+    {
+      "source": "clienthello_only.pcap",
+      "name": "TLS-Session-198.51.100.6:443",
+      "risk": "UNKNOWN"
+    },
+    {
+      "source": "hybrid_aes128_tls.pcap",
+      "name": "TLS-Session-198.51.100.5:443",
+      "risk": "MEDIUM"
+    },
+    {
+      "source": "hybrid_safe_tls.pcap",
+      "name": "TLS-Session-198.51.100.4:443",
+      "risk": "SAFE"
+    },
+    {
+      "source": "legacy_tls.pcap",
+      "name": "TLS-Session-198.51.100.1:443",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "legacy_tls.pcap",
+      "name": "TLS-Session-198.51.100.2:443",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "legacy_tls.pcap",
+      "name": "TLS-Session-198.51.100.3:443",
+      "risk": "CRITICAL"
+    }
+  ]
+}

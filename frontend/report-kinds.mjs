@@ -1,5 +1,5 @@
 // Report kinds the dashboard can show, in tab order. An extension adds a module that calls
-// registerReportKind() and imports it below. Without `row`/`details` renderers a kind uses the
+// registerReportKind() and imports it from app.mjs. Without `row`/`details` renderers a kind uses the
 // generic scanner views; with them it receives `ui` helpers (element, badge, detailButton, …).
 export const REPORT_KINDS = {};
 
