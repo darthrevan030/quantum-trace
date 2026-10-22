@@ -24,7 +24,9 @@ def is_pqc_indicator(val) -> bool:
 
 def analyze_pcap_to_cbom(pcap_path: str, output_json: str | None = None):
     """Return a network CBOM of the TLS sessions in a capture; write it to output_json only if given."""
-    packets = rdpcap(pcap_path)
+    # Open the file ourselves: rdpcap leaves its own handle open when the file is not a capture.
+    with open(pcap_path, "rb") as handle:
+        packets = rdpcap(handle)
 
     sessions = {}
 

@@ -45,6 +45,16 @@ class AnalysisTest(unittest.TestCase):
             (Path(folder) / "app.js").write_text("crypto.createHash('md5');\n")
             self.assertEqual(set(run_scanners(Path(folder))), {"code", "network"})
 
+    def test_unreadable_captures_are_skipped_and_recorded(self):
+        with tempfile.TemporaryDirectory() as folder:
+            shutil.copy(CAPTURES / "hybrid_safe_tls.pcap", folder)
+            (Path(folder) / "broken.pcap").write_bytes(b"\xd4\xc3\xb2\xa1 truncated")
+            (Path(folder) / "empty.pcapng").write_bytes(b"")
+            network = run_scanners(Path(folder))["network"]
+        self.assertEqual([c["source"] for c in network["components"]], ["hybrid_safe_tls.pcap"])
+        self.assertEqual(network["metadata"]["unreadableCaptures"], ["broken.pcap", "empty.pcapng"])
+        self.assertEqual(network["metadata"]["captures"], 3)
+
     def test_no_captures_means_no_network_report(self):
         self.assertNotIn("network", run_scanners(ROOT / "test_data/js_crypto"))
 

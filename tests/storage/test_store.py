@@ -71,12 +71,12 @@ class SourceStoreTest(unittest.TestCase):
 
     def test_unregistered_kind_is_rejected_on_save_and_skipped_on_load(self):
         self.store.create({"id": "s2", "name": "x", "kind": "files"})
-        with self.assertRaisesRegex(ValueError, "network"):
-            self.store.save_reports("s2", {"network": {"components": []}})
-        # A database written by a build with the network extension still opens without it.
+        with self.assertRaisesRegex(ValueError, "not-a-kind"):
+            self.store.save_reports("s2", {"not-a-kind": {"components": []}})
+        # A database written by a build with an extension still opens without that extension.
         self.store.save_reports("s2", {"code": {"components": []}})
         with closing(sqlite3.connect(self.db)) as conn, conn:
-            conn.execute("INSERT INTO source_report VALUES('s2', 'network', '{}')")
+            conn.execute("INSERT INTO source_report VALUES('s2', 'not-a-kind', '{}')")
         self.assertEqual(set(self.store.get("s2")["reports"]), {"code"})
 
     def test_extension_kind_registers_its_own_table(self):

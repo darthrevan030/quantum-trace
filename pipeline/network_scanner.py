@@ -20,15 +20,24 @@ def scan_network(root, files):
     if not captures:
         return None
     # Scapy is slow to import, so only load it when there is a capture to read.
+    from scapy.error import Scapy_Exception
+
     from pipeline.pcap_scanner import analyze_pcap_to_cbom
 
-    components = []
+    components, unreadable = [], []
     for path in captures:
-        report = classify_cbom(translate_cbom(analyze_pcap_to_cbom(str(path))))
+        try:
+            raw = analyze_pcap_to_cbom(str(path))
+        except (Scapy_Exception, EOFError):
+            # One damaged capture is reported, not allowed to fail the whole source.
+            unreadable.append(path.relative_to(root).as_posix())
+            continue
+        report = classify_cbom(translate_cbom(raw))
         for component in report["components"]:
             component["source"] = str(path)
         components.extend(report["components"])
-    return {"metadata": {"source": "TLS packet capture analysis", "captures": len(captures)}, "components": components}
+    metadata = {"source": "TLS packet capture analysis", "captures": len(captures), "unreadableCaptures": unreadable}
+    return {"metadata": metadata, "components": components}
 
 
 def import_network(component, report):
