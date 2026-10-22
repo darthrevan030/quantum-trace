@@ -2,7 +2,7 @@
 
 QuantumTrace scans a code repository, finds the cryptography it uses, and reports whether each algorithm is safe against quantum computers. It produces a Markdown and JSON report from the command line, and a dashboard for exploring the findings.
 
-JavaScript and TypeScript have the deepest coverage. Python, Java, Go and `package.json` dependencies are also scanned.
+JavaScript and TypeScript have the deepest coverage. Python, Java, Go and `package.json` dependencies are also scanned, and AWS inventory exports (KMS keys, ACM certificates, load-balancer TLS policies) are rated too.
 
 ## Quick start
 
@@ -84,6 +84,7 @@ When a key size is hidden at the call site (`AES.new(key)`), the finding is rate
 | Python | `cryptography`, PyCryptodome, `hashlib`, `hmac`, `ssl`, KDFs, bcrypt, PyJWT, post-quantum names |
 | Java / Kotlin | JCA `getInstance` calls (`KeyPairGenerator`, `Cipher`, `Signature`, `MessageDigest`, `Mac`, `KeyAgreement`, `SecretKeyFactory`, `SSLContext`), post-quantum names |
 | Go | `crypto/rsa`, `ecdsa`, `ecdh`, `ed25519`, `aes`, `des`, `rc4`, hashes, `hmac`, `tls` versions and curves, `mlkem` |
+| AWS inventory JSON | Any `.json` file with a `Keys` (KMS), `Certificates` (ACM) or `LoadBalancers` (ELB) list, whatever its name. KMS key specs and certificate key algorithms are rated by the catalog; TLS policies whose name contains `PQ` offer hybrid ML-KEM key exchange and are Safe, other `ELBSecurityPolicy-*` policies are classical and Critical. Plain HTTP listeners are skipped |
 
 Comments, minified bundles (`*.min.js`), type declarations (`*.d.ts`), and `node_modules`, `vendor`, `dist` and `build` directories are skipped. Findings in test files are tagged `test`, so they can be excluded. Files over 2 MB are skipped, and scanning stops after 50,000 files. The report records how many files were skipped either way.
 
@@ -120,6 +121,7 @@ pipeline/
   rules/*.json         detection rules, one file per language
   code_scanner.py      runs the rules over source files
   manifest_scanner.py  crypto libraries in package.json
+  cloud_posture_scanner.py  cloud report kind: AWS KMS keys, ACM certificates, TLS policies
   walker.py            repository walk with skip rules and limits
   registry.py          report kinds; extensions register here
   analyze_source.py    runs every registered scanner on a folder
@@ -129,10 +131,10 @@ pipeline/
   source_store.py      SQLite persistence (per-kind storage registry)
   export_cbom.py       CycloneDX export (per-kind exporters)
 server.py              API and static dashboard
-frontend/              dashboard (no build step)
-tests/<feature>/       tests grouped by feature: catalog, scanner, report, storage,
-                       export, server, fixtures (unittest) and dashboard (node --test)
-test_data/             fixtures (js_crypto/, code/), their generators/ and expected/ results
+frontend/              dashboard (no build step); extension views in frontend/kinds/
+tests/<feature>/       tests grouped by feature: catalog, scanner, cloud, report,
+                       storage, export, server, fixtures (unittest) and dashboard (node --test)
+test_data/             fixtures (js_crypto/, code/, cloud/), their generators/ and expected/ results
 outputs/               generated reports and the dashboard database (gitignored)
 ```
 
@@ -168,9 +170,9 @@ Rule fields:
 | Analysis | `registry.register(kind, scanner, component_types)`, and add the module to `SCANNER_MODULES` |
 | Storage | `source_store.register_storage(kind, table, schema, columns, legacy)` |
 | CBOM | `export_cbom.register_exporter(kind, exporter)` |
-| Dashboard | `registerReportKind(kind, config)` in `frontend/report-kinds.mjs`, with optional `row`/`details` renderers |
+| Dashboard | `registerReportKind(kind, config)` from a module in `frontend/kinds/`, imported by `frontend/app.mjs`, with optional `row`/`details` renderers |
 
-Network (PCAP) and cloud (AWS KMS, ACM and load-balancer) scanners are being added this way on separate branches.
+Cloud inventories are added this way: `pipeline/cloud_posture_scanner.py` registers the analysis, storage and CBOM hooks, and `frontend/kinds/cloud.mjs` the tab. Network captures (PCAP) follow on a separate branch.
 
 ## Tests
 
