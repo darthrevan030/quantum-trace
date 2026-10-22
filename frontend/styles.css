@@ -276,6 +276,17 @@ dialog::backdrop { background: #050d1db3; }
 .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
 .dialog-heading h2 { overflow-wrap: anywhere; font-size: 24px; }
 #close-dialog { font-size: 23px; padding: 0 12px; }
+/* Network session view (frontend/kinds/network.mjs) */
+.part-evaluation { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.algorithm-name { font-weight: 550; color: var(--text); }
+.assessment-note, td small.assessment-note { font: 400 10px/1.5 var(--font-body); color: var(--muted); margin: 0; white-space: normal; }
+.evaluation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
+.evaluation-card { background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px; overflow-wrap: anywhere; }
+.evaluation-card h3 { margin-bottom: 14px; color: var(--muted); font-size: 11px; }
+.evaluation-card .algorithm-name { font-size: 14px; }
+.evaluation-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin: 16px 0 0; }
+.hybrid-parts { list-style: none; padding: 12px 0; margin: 14px 0 0; border-top: 1px solid var(--border); }
+.hybrid-parts li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11px; margin-bottom: 8px; }
 .risk-conclusion { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: var(--surface-raised); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius-sm); margin-top: 20px; }
 .risk-conclusion p { color: var(--muted); font-size: 11px; margin-top: 6px; }
 .risk-conclusion > .risk { font-size: 12px; flex-shrink: 0; }
@@ -379,6 +390,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .scanner-score { margin-left: 0; }
 }
 @media (max-width: 600px) {
+  .evaluation-grid { grid-template-columns: 1fr; }
   .nav-link { flex: 1; justify-content: center; white-space: nowrap; min-height: 40px; font-size: 11px; padding-inline: 7px; }
   .nav-link .icon { display: none; }
   .chart-grid { display: block; }
