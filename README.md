@@ -4,8 +4,6 @@ QuantumTrace scans a code repository, finds the cryptography it uses, and report
 
 JavaScript and TypeScript have the deepest coverage. Python, Java, Go and `package.json` dependencies are also scanned, and TLS packet captures are analysed session by session.
 
-[Watch the demo on YouTube](https://youtu.be/FoSCUCO0r4U).
-
 ## Quick start
 
 QuantumTrace uses [uv](https://docs.astral.sh/uv/) and needs Python 3.11 or later. `git` is only needed to scan repository URLs.
