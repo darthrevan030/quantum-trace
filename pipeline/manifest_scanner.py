@@ -52,10 +52,11 @@ def _packages(value):
         yield from _packages(nested)
 
 
-def _component(path, relative, line, snippet, package, algorithm, section):
+def _component(path, relative, line, snippet, package, algorithm, section, version=None, dependency_path=None):
+    pinned = f"{package}@{version}" if version else package
     if algorithm:
         assessment = classify(algorithm)
-        label = f"{algorithm} via {package}"
+        label = f"{algorithm} via {pinned}"
     else:
         assessment = {
             "risk": "UNKNOWN",
@@ -64,7 +65,8 @@ def _component(path, relative, line, snippet, package, algorithm, section):
             "called, which appear as separate code findings.",
             "suggestion": "Review how this library is used.",
         }
-        label = f"{package} (crypto library)"
+        label = f"{pinned} (crypto library)"
+    extra = {key: value for key, value in (("version", version), ("dependencyPath", dependency_path)) if value}
     return {
         "type": "application-code",
         "name": f"{path.name}:{line}",
@@ -81,6 +83,7 @@ def _component(path, relative, line, snippet, package, algorithm, section):
             "dependencySection": section,
             "keySize": None,
             "keySizeBits": None,
+            **extra,
         },
         "quantumRiskAssessment": {"tier": assessment["risk"], **{k: v for k, v in assessment.items() if k != "risk"}},
     }
@@ -113,4 +116,144 @@ def scan_package_json(path, relative):
     return components
 
 
-MANIFESTS = {"package.json": scan_package_json}
+LOCKFILES = ("package-lock.json", "npm-shrinkwrap.json")
+LOCK_DEPENDENCY_FIELDS = ("dependencies", "optionalDependencies", "peerDependencies")
+KEY_LINE = re.compile(r'^\s*"([^"]+)"\s*:\s*\{')
+
+
+def _lock_nodes(lock, sibling):
+    """Return (nodes, roots) for a lockfile.
+
+    nodes maps an install path ("node_modules/a/node_modules/b") to {name, version, dev, deps}.
+    roots is the set of directly declared package names, or None when the lockfile cannot say.
+    """
+    nodes, roots = {}, None
+    packages = lock.get("packages")
+    if isinstance(packages, dict):
+        roots = set()
+        for key, entry in packages.items():
+            if not isinstance(entry, dict) or entry.get("link"):
+                continue
+            declared = [name for field in LOCK_DEPENDENCY_FIELDS + ("devDependencies",)
+                        for name in (entry.get(field) or {})]
+            if "node_modules/" not in key:  # The root project ("") and workspace packages.
+                roots.update(declared)
+                continue
+            nodes[key] = {"name": entry.get("name") or key.rsplit("node_modules/", 1)[1], "version": entry.get("version"),
+                          "dev": bool(entry.get("dev")),
+                          "deps": [name for field in LOCK_DEPENDENCY_FIELDS for name in (entry.get(field) or {})]}
+    elif isinstance(lock.get("dependencies"), dict):
+        def flatten(dependencies, prefix):
+            for name, entry in dependencies.items():
+                if not isinstance(entry, dict):
+                    continue
+                key = f"{prefix}node_modules/{name}"
+                nodes[key] = {"name": name, "version": entry.get("version"), "dev": bool(entry.get("dev")),
+                              "deps": list(entry.get("requires") or {})}
+                if isinstance(entry.get("dependencies"), dict):
+                    flatten(entry["dependencies"], key + "/")
+
+        flatten(lock["dependencies"], "")
+        if isinstance(sibling, dict):
+            roots = {name for field in SECTIONS for name in (sibling.get(field) or {})}
+    return nodes, roots
+
+
+def _resolve(nodes, parent, name):
+    """The install path Node would load `name` from when required by the package at `parent`."""
+    while True:
+        candidate = f"{parent}/node_modules/{name}" if parent else f"node_modules/{name}"
+        if candidate in nodes:
+            return candidate
+        if not parent:
+            return None
+        cut = parent.rfind("/node_modules/")
+        parent = parent[:cut] if cut != -1 else ""
+
+
+def _reach(nodes, roots):
+    """Breadth-first walk from the declared packages; returns {install path: parent path, None for direct}."""
+    parents, queue = {}, []
+    for name in sorted(roots):
+        key = _resolve(nodes, "", name)
+        if key and key not in parents:
+            parents[key] = None
+            queue.append(key)
+    while queue:
+        key = queue.pop(0)
+        for name in nodes[key]["deps"]:
+            child = _resolve(nodes, key, name)
+            if child:
+                parents[child] = key
+                queue.append(child)
+    return parents
+
+
+def _chain(nodes, parents, key):
+    names = []
+    while key is not None:
+        names.append(nodes[key]["name"])
+        key = parents[key]
+    return names[::-1]
+
+
+def scan_package_lock(path, relative):
+    """Crypto libraries a lockfile resolves, including ones only pulled in transitively.
+
+    Direct dependencies are left to package.json when it sits beside the lockfile. A transitive library
+    is rated UNKNOWN: the lockfile shows it ships, not that the application calls it.
+    """
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        lock = json.loads(text)
+    except ValueError:
+        return []
+    if not isinstance(lock, dict):
+        return []
+    sibling = None
+    if path.with_name("package.json").is_file():
+        try:
+            sibling = json.loads(path.with_name("package.json").read_text(encoding="utf-8", errors="ignore"))
+        except ValueError:
+            pass
+    nodes, roots = _lock_nodes(lock, sibling)
+    parents = _reach(nodes, roots) if roots is not None else {}
+    lines = text.splitlines()
+    first_line = {}
+    for number, content in enumerate(lines, 1):
+        found = KEY_LINE.match(content)
+        if found:
+            first_line.setdefault(found[1], number)
+
+    installs = {}
+    for key in sorted(nodes, key=lambda item: (item.count("node_modules/"), item)):
+        node = nodes[key]
+        if node["name"] in NPM_LIBRARIES and node["version"]:
+            installs.setdefault((node["name"], node["version"]), []).append(key)
+    components = []
+    for (package, version), keys in installs.items():
+        direct = any(key in parents and parents[key] is None for key in keys)
+        if direct and sibling is not None:
+            continue
+        key = next((item for item in keys if item in parents and parents[item] is None), keys[0])
+        line = first_line.get(key) or first_line.get(package) or 1
+        snippet = lines[line - 1].strip() if line <= len(lines) else ""
+        if roots is None:
+            section, algorithm, chain = "lockfile", None, None
+        elif direct:
+            section, algorithm, chain = "dependencies", NPM_LIBRARIES[package], None
+        else:
+            section, algorithm = "transitive", None
+            chain = _chain(nodes, parents, key) if key in parents else None
+        component = _component(path, relative, line, snippet, package, algorithm, section, version, chain)
+        if section != "dependencies":
+            component["cryptoProperties"]["devOnly"] = all(nodes[item]["dev"] for item in keys)
+        if chain:
+            component["quantumRiskAssessment"]["reason"] = (
+                f"Transitive dependency ({' > '.join(chain)}): the lockfile shows the library ships, "
+                "not that the application calls its cryptography.")
+        components.append(component)
+    return sorted(components, key=lambda item: item["line"])
+
+
+MANIFESTS = {"package.json": scan_package_json, **{name: scan_package_lock for name in LOCKFILES}}

@@ -7,6 +7,9 @@ SKIP_DIRS = {
     ".tox", ".mypy_cache", ".pytest_cache", "vendor", "dist", "build", "target", ".next", "coverage",
 }
 MAX_FILE_BYTES = 2 * 1024 * 1024
+# Lockfiles are machine-written and routinely exceed MAX_FILE_BYTES, yet hold the transitive dependency list.
+LOCKFILES = {"package-lock.json", "npm-shrinkwrap.json"}
+MAX_LOCKFILE_BYTES = 20 * 1024 * 1024
 MAX_FILES = 50_000
 
 
@@ -32,7 +35,7 @@ def walk(root, max_files=MAX_FILES, max_file_bytes=MAX_FILE_BYTES):
                 if path.name not in SKIP_DIRS:
                     directories.append(path)
             elif path.is_file():
-                if path.stat().st_size > max_file_bytes:
+                if path.stat().st_size > (max(max_file_bytes, MAX_LOCKFILE_BYTES) if path.name in LOCKFILES else max_file_bytes):
                     skipped["largeFiles"] += 1
                 elif len(files) >= max_files:
                     skipped["overFileLimit"] += 1
