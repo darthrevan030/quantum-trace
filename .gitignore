@@ -1,17 +1,28 @@
-*.db
-*.sqlite3
+# --- Python / uv ---
+__pycache__/
+*.py[cod]
 .venv/
-env/
 venv/
-__pycache__/
-*.py[cod]
-.env
-__pycache__/
-*.py[cod]
-.venv/
-.env
+env/
+*.egg-info/
 dist/
 build/
-*.egg-info/
-cbom_*.json
+
+# --- Secrets ---
+.env*
+!.env.example
+
+# --- Local data written by the app ---
+# SQLite databases anywhere (outputs/quantumtrace.db, test copies)
+*.db
+*.sqlite3
+# Uploaded and cloned sources, scan staging, and sample inputs
 input_files/
+# CLI reports (outputs/<target>/) and the default dashboard database
+outputs/
+# Scanner exports
+cbom_*.json
+
+# --- Tooling ---
+# Playwright MCP browser-test screenshots, snapshots and logs
+.playwright-mcp/

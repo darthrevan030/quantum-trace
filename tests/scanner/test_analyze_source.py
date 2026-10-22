@@ -7,7 +7,7 @@ from pipeline import registry
 from pipeline.analyze_source import analyze
 from pipeline.walker import walk
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class WalkerTest(unittest.TestCase):

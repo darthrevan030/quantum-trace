@@ -10,7 +10,7 @@ from pipeline import scan
 from pipeline.report import (NONE_FOUND, NOT_SAFE, PARTIAL, SAFE, VERDICT_DESCRIPTIONS, VERDICTS, build, exceeds,
                              summarize, to_markdown, verdict)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def component(source, line, algorithm, tier, context="source", asset="code-primitive", **extra):
@@ -161,6 +161,20 @@ class CliTest(unittest.TestCase):
             code, report, _, _ = self.run_cli("https://github.com/team/app")
         self.assertEqual(code, 1)
         self.assertEqual(report["target"], "team/app")
+
+    def test_default_output_is_outputs_folder_named_after_target(self):
+        def fake_clone(url, target):
+            Path(target).mkdir()
+            (Path(target) / "a.js").write_text("crypto.createHash('sha256');\n")
+
+        with tempfile.TemporaryDirectory() as folder, contextlib.chdir(folder), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(scan.main([str(ROOT / "test_data/js_crypto"), "--fail-on", "none"]), 0)
+            with patch("pipeline.scan.clone", side_effect=fake_clone):
+                self.assertEqual(scan.main(["https://github.com/team/app"]), 0)
+            self.assertTrue((Path(folder) / "outputs/js_crypto/report.md").is_file())
+            self.assertTrue((Path(folder) / "outputs/js_crypto/report.json").is_file())
+            self.assertTrue((Path(folder) / "outputs/team-app/report.md").is_file())
 
     def test_bad_targets_fail_cleanly(self):
         with contextlib.redirect_stderr(io.StringIO()) as err:

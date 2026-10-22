@@ -5,6 +5,7 @@
 
 import argparse
 import json
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -31,7 +32,7 @@ def scan_target(target):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Report whether a repository's cryptography is quantum safe.")
     parser.add_argument("target", help="Local directory or https://github.com|gitlab.com repository URL")
-    parser.add_argument("-o", "--output-dir", default="quantumtrace-report", help="Where report.md and report.json are written")
+    parser.add_argument("-o", "--output-dir", help="Where report.md and report.json are written (default: outputs/<target>)")
     parser.add_argument("--fail-on", choices=list(FAIL_THRESHOLDS), default="critical",
                         help="Exit with status 1 when a finding at or above this risk exists (default: critical)")
     parser.add_argument("--exclude-tests", action="store_true", help="Leave findings in test files out of the report")
@@ -43,7 +44,7 @@ def main(argv=None):
         return 2
     include_tests = not args.exclude_tests
     summary = build(reports, include_tests)
-    output = Path(args.output_dir)
+    output = Path(args.output_dir) if args.output_dir else Path("outputs") / re.sub(r"[^\w.-]+", "-", title)
     output.mkdir(parents=True, exist_ok=True)
     (output / "report.json").write_text(json.dumps({"target": title, "summary": summary, "reports": reports}, indent=2),
                                         encoding="utf-8")

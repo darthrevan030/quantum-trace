@@ -7,7 +7,7 @@ from pathlib import Path
 from pipeline.code_scanner import load_rules, scan_code, scan_repositories
 from pipeline.crypto_catalog import RISKS
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def findings(report):
