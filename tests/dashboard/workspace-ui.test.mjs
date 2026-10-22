@@ -98,8 +98,8 @@ assert.equal(rows().length, 2, 'Pre-existing sources belong to the first account
 assert.equal(node('#workspace-source').value, 'old-files', 'Select the first real source');
 assert.ok(!calls.some(call => call.url === '/api/sources/sample'), 'Never fetch the hidden sample report');
 // Report tabs and chart scopes come from the registered report kinds, not hard-coded markup.
-assert.deepEqual(node('#report-switcher').children.map(button => button.dataset.report), ['code']);
-assert.deepEqual(node('#chart-scope').children.map(option => option.value), ['all', 'code']);
+assert.deepEqual(node('#report-switcher').children.map(button => button.dataset.report), ['code', 'cloud']);
+assert.deepEqual(node('#chart-scope').children.map(option => option.value), ['all', 'code', 'cloud']);
 assert.equal(node('#verdict-banner').hidden, false);
 assert.equal(node('#verdict-text').textContent, 'NOT QUANTUM SAFE');
 assert.equal(node('#verdict-description').textContent, 'Breakable cryptography is in use.');

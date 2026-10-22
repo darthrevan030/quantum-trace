@@ -1,6 +1,7 @@
 import { RISKS, riskOf, parseRepository, filterSessions, formatBytes, reportEntries, riskDistribution, algorithmCounts } from './model.mjs';
 import { analyzeSource, listSources, exportSourceCbom, exportSourceReport } from './source-api.mjs';
 import { REPORT_KINDS } from './report-kinds.mjs';
+import './kinds/cloud.mjs';
 import { droppedFiles, prepareFiles, uploadPath } from './file-input.mjs';
 import { MOCK_ACCOUNTS, createMockWorkspace } from './mock-workspace.mjs';
 
