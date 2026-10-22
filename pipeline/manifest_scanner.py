@@ -75,6 +75,8 @@ def _component(path, relative, line, snippet, package, algorithm, section):
             "assetType": "dependency",
             "language": "npm",
             "detectedAlgorithm": label,
+            # A declared library is not evidence of how it is used, so it never feeds the purpose charts.
+            "primitive": None,
             "library": package,
             "dependencySection": section,
             "keySize": None,

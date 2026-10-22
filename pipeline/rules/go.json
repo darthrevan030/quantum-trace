@@ -5,7 +5,7 @@
   "rules": [
     {
       "id": "go-rsa-generate",
-      "regex": "\\brsa\\.GenerateKey\\([^,\\n]*,\\s*(\\d+)?",
+      "regex": "\\brsa\\.GenerateKey\\((?:[^,)]*,\\s*(\\d+))?",
       "algorithm": "RSA",
       "keySizeGroup": 1
     },

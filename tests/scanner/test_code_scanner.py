@@ -87,6 +87,15 @@ class JavaScriptRulesTest(unittest.TestCase):
         self.assertEqual(dependency["cryptoProperties"]["context"], "source")
         self.assertEqual(props["context"], "source")
 
+    def test_rules_without_a_purpose_take_it_from_the_algorithm(self):
+        # js-cryptojs matches hashes and ciphers alike, so the purpose comes from the catalog.
+        by_line = {(c["source"], c["line"]): c["cryptoProperties"]["primitive"] for c in self.report["components"]}
+        self.assertEqual(by_line[("src/libs.js", 5)], "encryption")
+        self.assertEqual(by_line[("src/libs.js", 6)], "hash")
+        self.assertEqual(by_line[("src/libs.js", 7)], "keyExchange")
+        # A rule's own purpose still wins: publicEncrypt is encryption, though RSA alone is ambiguous.
+        self.assertEqual(by_line[("src/keys.ts", 11)], "encryption")
+
     def test_test_files_are_tagged(self):
         with tempfile.TemporaryDirectory() as folder:
             (Path(folder) / "test").mkdir()
@@ -146,7 +155,9 @@ class PortedRulesTest(unittest.TestCase):
                                          '  g.initialize(3072);\n'
                                          '  Signature.getInstance("SHA256withECDSA");\n'
                                          '  Cipher.getInstance("DESede/CBC/PKCS5Padding");\n} }\n')
-            (root / "c.go").write_text('package c\nfunc f() { _ = des.NewTripleDESCipher(k); _ = sha256.Sum256(b); _ = tls.VersionTLS12 }\n')
+            (root / "c.go").write_text('package c\nfunc f() { _ = des.NewTripleDESCipher(k); _ = sha256.Sum256(b); _ = tls.VersionTLS12 }\n'
+                                       # gofmt-wrapped and argument-less calls must still be found.
+                                       'func g() {\n\tk, _ := rsa.GenerateKey(\n\t\trand.Reader,\n\t\t3072,\n\t)\n\t_ = rsa.GenerateKey(\n}\n')
             self.assertEqual(findings(scan_code(root)), {
                 ("a.py", 2, "MD5", "CRITICAL"),
                 ("a.py", 3, "TLSv1.2", "HIGH"),
@@ -156,6 +167,8 @@ class PortedRulesTest(unittest.TestCase):
                 ("c.go", 2, "3DES", "MEDIUM"),
                 ("c.go", 2, "SHA-256", "SAFE"),
                 ("c.go", 2, "TLSv1.2", "HIGH"),
+                ("c.go", 4, "RSA-3072", "CRITICAL"),
+                ("c.go", 8, "RSA", "CRITICAL"),
             })
 
 

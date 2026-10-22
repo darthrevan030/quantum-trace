@@ -40,6 +40,7 @@ SYMMETRIC_SIZES = {
     "ChaCha20": (256,),
     "XSalsa20": (256,),
     "Salsa20": (256,),
+    "Rabbit": (128,),
 }
 HASHES = {
     "SHA-1": "MEDIUM",
@@ -152,6 +153,7 @@ PATTERNS = [
     (r"x?chacha20(?:poly1305)?", _fixed("ChaCha20", 256)),
     (r"xsalsa20(?:poly1305)?", _fixed("XSalsa20", 256)),
     (r"salsa20", _fixed("Salsa20", 256)),
+    (r"rabbit", _fixed("Rabbit", 128)),
     (r"(?:desede3?|des3|tripledes|3des)" + MODES, _fixed("3DES")),
     (r"desx?" + MODES, _fixed("DES")),
     (r"(?:a?rc4|arcfour)(?:\d+|hmacmd5)?", _fixed("RC4")),
@@ -352,6 +354,23 @@ def classify(algorithm, key_bits=None, purpose=None, parameter_set=None, require
         risk, threat, reason = PROTOCOLS[name]
         return finding(risk, threat, reason, "Require TLS 1.3 with an ML-KEM hybrid group (e.g. X25519MLKEM768).")
     return finding("UNKNOWN", "Unknown", "Algorithm, parameters, or classification rule are unavailable.")
+
+
+def default_purpose(algorithm):
+    """The purpose an algorithm's family implies, or None when it can serve several (RSA, EC)."""
+    info = normalize(algorithm)
+    name = info["algorithm"] or algorithm
+    if name in SYMMETRIC_SIZES or name in LEGACY_SYMMETRIC or name in {"DES", "RC4", "RC2"}:
+        return "encryption"
+    if name in HASHES or name in {"MD5", "MD4"} or (isinstance(name, str) and name.startswith("HMAC-")):
+        return "hash"
+    if name in KEY_EXCHANGE_ONLY or name in MLKEM_GROUPS or name in {"ML-KEM", "FrodoKEM", "HQC", "Classic-McEliece"}:
+        return "keyExchange"
+    if name in SIGNATURE_ONLY or name in {"ML-DSA", "SLH-DSA", "FN-DSA", "XMSS", "LMS"}:
+        return "signature"
+    if name in KDFS:
+        return "kdf"
+    return None
 
 
 def classify_name(name, key_bits=None, purpose=None, require_parameters=False):

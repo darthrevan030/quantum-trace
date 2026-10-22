@@ -9,7 +9,7 @@ from bisect import bisect_right
 from collections import Counter
 from pathlib import Path
 
-from pipeline.crypto_catalog import RISKS, classify, label, normalize
+from pipeline.crypto_catalog import RISKS, classify, default_purpose, label, normalize
 from pipeline.manifest_scanner import MANIFESTS
 from pipeline.registry import register
 from pipeline.walker import walk
@@ -104,7 +104,8 @@ def _finding(rule, match, window, raw, item, relative):
         key = ("?", rule["id"])
     else:
         target = rule.get("classifyAs") or info["algorithm"]
-        assessment = classify(target, info["keySizeBits"], rule.get("purpose"), info["parameterSet"])
+        purpose = rule.get("purpose") or default_purpose(info["algorithm"])
+        assessment = classify(target, info["keySizeBits"], purpose, info["parameterSet"])
         if rule.get("classifyAs") and rule.get("reason"):
             assessment["reason"] = rule["reason"]
         name = _fill(rule["label"], match, item) if rule.get("label") and "algorithm" in rule else label(info)
@@ -113,7 +114,7 @@ def _finding(rule, match, window, raw, item, relative):
     return key, {
         "cryptoProperties": {
             "detectedAlgorithm": name,
-            "primitive": rule.get("purpose"),
+            "primitive": rule.get("purpose") if info["algorithm"] is None else purpose,
             "keySize": info["keySizeBits"],
             "keySizeBits": info["keySizeBits"],
             "ruleId": rule["id"],

@@ -1,6 +1,6 @@
 import unittest
 
-from pipeline.crypto_catalog import RISKS, classify, classify_name, label, normalize
+from pipeline.crypto_catalog import RISKS, classify, classify_name, default_purpose, label, normalize
 
 
 class NormalizeTest(unittest.TestCase):
@@ -141,6 +141,28 @@ class ClassifyTest(unittest.TestCase):
         # One catalog means one answer: code and network can no longer disagree.
         risks = {classify_name(name)["risk"] for name in ["sha1", "SHA-1", "SHA1", "sha-1"]}
         self.assertEqual(risks, {"MEDIUM"})
+
+
+class DefaultPurposeTest(unittest.TestCase):
+    def test_family_decides_purpose(self):
+        for name, purpose in [
+            ("AES", "encryption"), ("3DES", "encryption"), ("RC4", "encryption"), ("ChaCha20", "encryption"), ("Rabbit", "encryption"),
+            ("SHA-1", "hash"), ("MD5", "hash"), ("HMAC-SHA-256", "hash"),
+            ("X25519", "keyExchange"), ("ECDH", "keyExchange"), ("ML-KEM", "keyExchange"), ("X25519MLKEM768", "keyExchange"),
+            ("ECDSA", "signature"), ("Ed25519", "signature"), ("ML-DSA", "signature"), ("SLH-DSA", "signature"),
+            ("PBKDF2", "kdf"), ("bcrypt", "kdf"),
+        ]:
+            with self.subTest(name=name):
+                self.assertEqual(default_purpose(name), purpose)
+
+    def test_ambiguous_or_unknown_has_no_purpose(self):
+        # RSA and generic EC keys can sign or exchange keys; the name alone cannot say which.
+        for name in ["RSA", "EC", "TLSv1.2", None, "banana"]:
+            with self.subTest(name=name):
+                self.assertIsNone(default_purpose(name))
+
+    def test_rabbit_is_a_known_128_bit_stream_cipher(self):
+        self.assertEqual(classify("Rabbit")["risk"], "MEDIUM")
 
 
 class ClassifyNameTest(unittest.TestCase):
