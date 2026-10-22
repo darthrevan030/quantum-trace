@@ -1,0 +1,78 @@
+{
+  "description": "Expected output of the current QuantumTrace scanners; not a security certification.",
+  "kind": "code",
+  "fixture": "code",
+  "totalFindings": 13,
+  "riskCounts": {
+    "CRITICAL": 6,
+    "MEDIUM": 4,
+    "SAFE": 3
+  },
+  "findings": [
+    {
+      "source": "go/legacy/main.go",
+      "name": "main.go:12",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "go/legacy/main.go",
+      "name": "main.go:13",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "go/pqc/main.go",
+      "name": "main.go:4",
+      "risk": "SAFE"
+    },
+    {
+      "source": "go/symmetric/main.go",
+      "name": "main.go:8",
+      "risk": "MEDIUM"
+    },
+    {
+      "source": "java/LegacyCrypto.java",
+      "name": "LegacyCrypto.java:8",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "java/LegacyCrypto.java",
+      "name": "LegacyCrypto.java:9",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "java/LegacyCrypto.java",
+      "name": "LegacyCrypto.java:10",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "java/MigrationConfig.java",
+      "name": "MigrationConfig.java:3",
+      "risk": "SAFE"
+    },
+    {
+      "source": "java/SymmetricCrypto.java",
+      "name": "SymmetricCrypto.java:6",
+      "risk": "MEDIUM"
+    },
+    {
+      "source": "python/legacy/main.py",
+      "name": "main.py:6",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "python/legacy/main.py",
+      "name": "main.py:7",
+      "risk": "MEDIUM"
+    },
+    {
+      "source": "python/pqc_config.py",
+      "name": "pqc_config.py:2",
+      "risk": "SAFE"
+    },
+    {
+      "source": "python/symmetric/main.py",
+      "name": "main.py:5",
+      "risk": "MEDIUM"
+    }
+  ]
+}

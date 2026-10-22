@@ -132,9 +132,9 @@ pipeline/
   export_cbom.py       CycloneDX export (per-kind exporters)
 server.py              API and static dashboard
 frontend/              dashboard (no build step)
-tests/<feature>/       tests grouped by feature: catalog, scanner, report,
-                       storage, export, server (unittest) and dashboard (node --test)
-test_data/             js_crypto/ and code/ fixtures
+tests/<feature>/       tests grouped by feature: catalog, scanner, report, storage,
+                       export, server, fixtures (unittest) and dashboard (node --test)
+test_data/             fixtures (js_crypto/, code/), their generators/ and expected/ results
 outputs/               generated reports and the dashboard database (gitignored)
 ```
 
@@ -181,7 +181,7 @@ uv run python -m unittest discover -s tests -t .
 node --test "tests/dashboard/*.test.mjs"
 ```
 
-Python tests use disposable databases and folders; only cloning is mocked. To also validate CBOM exports against the official CycloneDX schemas, download `bom-1.7.schema.json` and `cryptography-defs.schema.json` into a folder and run:
+Python tests use disposable databases and folders; only cloning is mocked. Fixtures and their per-feature generators are described in [test_data/README.md](test_data/README.md). To also validate CBOM exports against the official CycloneDX schemas, download `bom-1.7.schema.json` and `cryptography-defs.schema.json` into a folder and run:
 
 ```sh
 CBOM_SCHEMA_DIR=path/to/schemas uv run --with jsonschema python -m unittest tests.export.test_cbom -v
