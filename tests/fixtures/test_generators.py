@@ -41,5 +41,22 @@ class CodeGeneratorTest(unittest.TestCase):
                 verify("network", code.FIXTURE, {}, expected_dir=folder)
 
 
+class CloudGeneratorTest(unittest.TestCase):
+    def test_regenerating_reproduces_the_committed_inventories_exactly(self):
+        from test_data.generators import cloud
+
+        with tempfile.TemporaryDirectory() as folder:
+            cloud.generate(Path(folder))
+            self.assertEqual(tree(folder), tree(cloud.FIXTURE))
+
+    def test_expected_results_match_the_scanner(self):
+        from test_data.generators import cloud
+
+        with tempfile.TemporaryDirectory() as folder:
+            manifest = verify("cloud", cloud.FIXTURE, cloud.EXPECTED_COUNTS, expected_dir=folder)
+        committed = json.loads((cloud.FIXTURE.parent / "expected/cloud.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest, committed)
+
+
 if __name__ == "__main__":
     unittest.main()
