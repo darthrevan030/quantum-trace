@@ -33,9 +33,10 @@ class NormalizeTest(unittest.TestCase):
             ("X25519", "X25519", None),
             ("X25519MLKEM768", "X25519MLKEM768", None),
             ("ml-kem-768", "ML-KEM", None),
-            ("Kyber1024", "ML-KEM", None),
+            ("Kyber1024", "Kyber", None),
             ("ML-DSA-65", "ML-DSA", None),
-            ("Dilithium3", "ML-DSA", None),
+            ("Dilithium3", "Dilithium", None),
+            ("SPHINCS+-SHA2-128s", "SPHINCS+", None),
             ("SLH-DSA-SHA2-128s", "SLH-DSA", None),
         ]:
             with self.subTest(name=name):
@@ -45,7 +46,8 @@ class NormalizeTest(unittest.TestCase):
 
     def test_parameter_sets_are_captured(self):
         self.assertEqual(normalize("ml-kem-768")["parameterSet"], "768")
-        self.assertEqual(normalize("Dilithium3")["parameterSet"], "65")
+        self.assertEqual(normalize("Dilithium3")["parameterSet"], "3")
+        self.assertEqual(normalize("kyber768")["parameterSet"], "768")
         self.assertEqual(normalize("aes-256-gcm")["mode"], "GCM")
 
     def test_jwt_algorithm_names(self):
@@ -125,6 +127,36 @@ class ClassifyTest(unittest.TestCase):
         for algorithm in ["ML-KEM", "ML-DSA", "SLH-DSA", "FN-DSA", "XMSS", "LMS", "X25519MLKEM768", "SecP256r1MLKEM768"]:
             with self.subTest(algorithm=algorithm):
                 self.assertEqual(self.assertRisk("SAFE", algorithm)["threat"], "None")
+
+    def test_prestandard_pqc_is_not_the_fips_algorithm(self):
+        for name, successor, standard in [("Kyber768", "ML-KEM", "FIPS 203"), ("Dilithium3", "ML-DSA", "FIPS 204"),
+                                          ("SPHINCS+", "SLH-DSA", "FIPS 205")]:
+            with self.subTest(name=name):
+                result = classify_name(name)
+                self.assertEqual(result["risk"], "MEDIUM")
+                self.assertEqual(result["threat"], "Pre-standard")
+                self.assertIn(successor, result["suggestion"])
+                self.assertEqual(result["nistStandard"], standard)
+                self.assertNotIn(successor, result["algorithm"])
+        self.assertEqual(classify_name("Kyber768")["algorithm"], "Kyber-768")
+        # The standardized names are unaffected.
+        self.assertEqual(classify_name("ML-KEM-768")["risk"], "SAFE")
+        self.assertEqual(classify_name("ML-DSA-65")["risk"], "SAFE")
+
+    def test_prestandard_pqc_keeps_its_purpose(self):
+        self.assertEqual(default_purpose("Kyber768"), "keyExchange")
+        self.assertEqual(default_purpose("Dilithium3"), "signature")
+        self.assertEqual(default_purpose("SPHINCS+"), "signature")
+
+    def test_policy_documents_exist(self):
+        from pathlib import Path
+        from pipeline.crypto_catalog import POLICY
+
+        documents = [value for value in POLICY.values() if value.endswith(".pdf")]
+        self.assertTrue(documents)
+        for document in documents:
+            with self.subTest(document=document):
+                self.assertTrue((Path(__file__).resolve().parents[2] / document).is_file())
 
     def test_protocol_versions(self):
         for version in ["SSLv3", "TLSv1", "TLSv1.1"]:

@@ -9,7 +9,7 @@ import re
 RISKS = ("CRITICAL", "HIGH", "MEDIUM", "LOW", "SAFE", "UNKNOWN")
 
 POLICY = {
-    "primary": "pdfs/inspiring_solutions.pdf",
+    "primary": "Hackathon challenge brief (not bundled in this repository)",
     "keySizeReference": "pdfs/nist_standards.pdf",
     "sha1Resolution": "SHA-1 is Medium per the challenge brief; the reference matrix instead rates it Critical.",
     "missingParameters": "Structured evidence with a missing key size or parameter set is UNKNOWN; "
@@ -74,6 +74,12 @@ PQC = {
     "Classic-McEliece": None,
 }
 PQC_PARAMETERS = {"ML-KEM": {"512", "768", "1024"}, "ML-DSA": {"44", "65", "87"}}
+# Round-3 submissions that FIPS 203/204/205 changed; quantum resistant but neither standardized nor interoperable.
+PRESTANDARD = {
+    "Kyber": ("ML-KEM", "FIPS 203", {"512", "768", "1024"}),
+    "Dilithium": ("ML-DSA", "FIPS 204", {"2", "3", "5"}),
+    "SPHINCS+": ("SLH-DSA", "FIPS 205", None),
+}
 # Only recognized combined constructions get a hybrid assessment.
 MLKEM_GROUPS = {
     "MLKEM512",
@@ -98,7 +104,6 @@ DIRECT = {"NONE"}
 
 MODES = r"(ecb|cbc|cfb1|cfb8|cfb|ofb|ctr|gcm|ccm|ocb|xts|siv|wrap|kw)?"
 CURVES = {"192": "P-192", "224": "P-224", "256": "P-256", "384": "P-384", "521": "P-521"}
-DILITHIUM = {"2": "44", "3": "65", "5": "87"}
 # Pure ML-KEM groups normalize to ML-KEM with a parameter set; only combinations are hybrids.
 HYBRIDS = {group.lower(): group for group in MLKEM_GROUPS if not re.fullmatch(r"MLKEM\d+", group)}
 
@@ -192,10 +197,12 @@ PATTERNS = [
     (r"(?:x448|curve448)", _fixed("X448")),
     (r"ed25519", _fixed("Ed25519")),
     (r"ed448", _fixed("Ed448")),
-    (r"(?:mlkem|kyber)(\d+)?", _pqc("ML-KEM", PQC_PARAMETERS["ML-KEM"])),
+    (r"mlkem(\d+)?", _pqc("ML-KEM", PQC_PARAMETERS["ML-KEM"])),
+    (r"kyber(\d+)?", _pqc("Kyber", PRESTANDARD["Kyber"][2])),
     (r"mldsa(\d+)?", _pqc("ML-DSA", PQC_PARAMETERS["ML-DSA"])),
-    (r"dilithium(\d)?", _pqc("ML-DSA", PQC_PARAMETERS["ML-DSA"], DILITHIUM)),
-    (r"(?:slhdsa|sphincs)\w*", _fixed("SLH-DSA")),
+    (r"dilithium(\d)?", _pqc("Dilithium", PRESTANDARD["Dilithium"][2])),
+    (r"slhdsa\w*", _fixed("SLH-DSA")),
+    (r"sphincs\w*", _fixed("SPHINCS+")),
     (r"(?:fndsa|falcon)(?:512|1024)?", _fixed("FN-DSA")),
     (r"xmss\w*", _fixed("XMSS")),
     (r"(?:hss)?lms\w*", _fixed("LMS")),
@@ -323,6 +330,12 @@ def classify(algorithm, key_bits=None, purpose=None, parameter_set=None, require
     if name in MLKEM_GROUPS:
         return finding("SAFE", "None", "Recognized ML-KEM group; a hybrid is assessed as a combined construction.",
                        standard="FIPS 203 (ML-KEM component)")
+    if name in PRESTANDARD:
+        successor, standard, _ = PRESTANDARD[name]
+        return finding("MEDIUM", "Pre-standard",
+                       f"{name} is the pre-standard design that became {successor}; it is quantum resistant "
+                       f"but not standardized and not interoperable with {successor}.",
+                       f"Migrate to {successor} ({standard}).", standard)
     if name in PQC:
         return _pqc_finding(name, parameter, require_parameters)
     if name in SYMMETRIC_SIZES:
@@ -364,9 +377,9 @@ def default_purpose(algorithm):
         return "encryption"
     if name in HASHES or name in {"MD5", "MD4"} or (isinstance(name, str) and name.startswith("HMAC-")):
         return "hash"
-    if name in KEY_EXCHANGE_ONLY or name in MLKEM_GROUPS or name in {"ML-KEM", "FrodoKEM", "HQC", "Classic-McEliece"}:
+    if name in KEY_EXCHANGE_ONLY or name in MLKEM_GROUPS or name in {"ML-KEM", "Kyber", "FrodoKEM", "HQC", "Classic-McEliece"}:
         return "keyExchange"
-    if name in SIGNATURE_ONLY or name in {"ML-DSA", "SLH-DSA", "FN-DSA", "XMSS", "LMS"}:
+    if name in SIGNATURE_ONLY or name in {"ML-DSA", "SLH-DSA", "FN-DSA", "XMSS", "LMS", "Dilithium", "SPHINCS+"}:
         return "signature"
     if name in KDFS:
         return "kdf"

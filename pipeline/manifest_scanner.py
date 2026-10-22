@@ -8,8 +8,8 @@ from pipeline.crypto_catalog import classify
 # Package -> the algorithm family it implies, or None when it depends on how it is called.
 NPM_LIBRARIES = {
     "@noble/post-quantum": "ML-KEM",
-    "crystals-kyber": "ML-KEM",
-    "crystals-kyber-js": "ML-KEM",
+    "crystals-kyber": "Kyber",
+    "crystals-kyber-js": "Kyber",
     "mlkem": "ML-KEM",
     "node-rsa": "RSA",
     "selfsigned": "RSA",
