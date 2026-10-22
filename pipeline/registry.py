@@ -3,7 +3,7 @@
 import importlib
 
 # Modules that call register() on import. An extension branch adds its module here.
-SCANNER_MODULES = ("pipeline.code_scanner", "pipeline.network_scanner")
+SCANNER_MODULES = ("pipeline.code_scanner", "pipeline.network_scanner", "pipeline.cloud_posture_scanner")
 
 SCANNERS = {}  # kind -> callable(root, files) -> report dict, or None when nothing applies
 COMPONENT_KINDS = {}  # CBOM component type -> kind, for importing existing scanner exports

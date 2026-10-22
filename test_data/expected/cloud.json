@@ -1,0 +1,63 @@
+{
+  "description": "Expected output of the current QuantumTrace scanners; not a security certification.",
+  "kind": "cloud",
+  "fixture": "cloud",
+  "totalFindings": 10,
+  "riskCounts": {
+    "CRITICAL": 6,
+    "SAFE": 3,
+    "UNKNOWN": 1
+  },
+  "findings": [
+    {
+      "source": "acm_certificates.json",
+      "name": "legacy.example.test",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "acm_certificates.json",
+      "name": "portal.example.test",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "kms_key_inventory.json",
+      "name": "alias/demo-legacy-signing",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "kms_key_inventory.json",
+      "name": "alias/demo-device-signing",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "kms_key_inventory.json",
+      "name": "alias/demo-symmetric-storage",
+      "risk": "SAFE"
+    },
+    {
+      "source": "kms_key_inventory.json",
+      "name": "alias/demo-missing-key-spec",
+      "risk": "UNKNOWN"
+    },
+    {
+      "source": "kms_key_inventory.json",
+      "name": "alias/demo-pq-signing",
+      "risk": "SAFE"
+    },
+    {
+      "source": "load_balancer_listeners.json",
+      "name": "demo-edge:443",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "load_balancer_listeners.json",
+      "name": "demo-edge:8443",
+      "risk": "CRITICAL"
+    },
+    {
+      "source": "load_balancer_listeners.json",
+      "name": "demo-edge:9443",
+      "risk": "SAFE"
+    }
+  ]
+}

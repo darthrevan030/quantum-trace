@@ -9,11 +9,11 @@ test_data/
   js_crypto/      hand-written JavaScript/TypeScript fixture (the dashboard's sample workspace)
   code/           generated Python, Java and Go fixture
   network/        generated TLS packet captures
+  cloud/          generated AWS inventory exports
   generators/     one generator per fixture, plus shared helpers
   expected/       recorded scanner results, one file per fixture
 ```
 
-Cloud (`cloud/`) fixtures, with their generator and expected results, come with the cloud scanner branch.
 
 ## js_crypto/
 
@@ -43,6 +43,17 @@ The post-quantum examples only declare algorithm names; they are rated Safe as k
 | `non_tls.pcap` | A DNS query with no TLS | 0 sessions |
 
 The captures contain synthetic TCP setup and TLS hello messages with dummy key-share bytes, not cryptographically valid TLS connections; they exercise parsing and classification, not key establishment. Documentation IP addresses are used and no packets are sent. TLS 1.3 authentication is not in the hello messages, so it shows as Unknown on its own without making an otherwise Safe hybrid session Unknown. `expected/network.json` lists each session.
+## cloud/
+
+Synthetic combined inventory exports in the shape the cloud scanner reads, not raw responses from one AWS API call. They use example account IDs and domains, and nothing contacts AWS. File names do not matter: the scanner looks for `Keys`, `Certificates` and `LoadBalancers` lists.
+
+| File | Assets | Expected result |
+| --- | --- | --- |
+| `kms_key_inventory.json` | RSA and elliptic-curve signing keys, an AES-256 storage key, a key with no key spec, an ML-DSA-65 signing key | 2 Critical, 2 Safe, 1 Unknown |
+| `acm_certificates.json` | RSA and elliptic-curve certificates | 2 Critical |
+| `load_balancer_listeners.json` | A classical TLS 1.3 policy, a legacy policy, a post-quantum (`PQ`) policy, and a plain HTTP listener that is skipped | 2 Critical, 1 Safe |
+
+`expected/cloud.json` lists each asset.
 
 ## Regenerate
 
@@ -51,6 +62,7 @@ Each generator writes its fixture with LF line endings, scans that folder on its
 ```sh
 uv run python -m test_data.generators.code
 uv run python -m test_data.generators.network
+uv run python -m test_data.generators.cloud
 ```
 
 If the scanner's output changes, the generator stops and shows the new counts. Update `EXPECTED_COUNTS` in the generator once the change is intended. `tests/fixtures/test_generators.py` fails if the generator and the committed fixture drift apart.

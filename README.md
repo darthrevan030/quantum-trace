@@ -2,7 +2,7 @@
 
 QuantumTrace scans a code repository, finds the cryptography it uses, and reports whether each algorithm is safe against quantum computers. It produces a Markdown and JSON report from the command line, and a dashboard for exploring the findings.
 
-JavaScript and TypeScript have the deepest coverage. Python, Java, Go and `package.json` dependencies are also scanned, and TLS packet captures are analysed session by session.
+JavaScript and TypeScript have the deepest coverage. Python, Java, Go and `package.json` dependencies are also scanned. TLS packet captures are analysed session by session, and AWS inventory exports (KMS keys, ACM certificates, load-balancer TLS policies) are rated too.
 
 ## Quick start
 
@@ -85,6 +85,7 @@ When a key size is hidden at the call site (`AES.new(key)`), the finding is rate
 | Java / Kotlin | JCA `getInstance` calls (`KeyPairGenerator`, `Cipher`, `Signature`, `MessageDigest`, `Mac`, `KeyAgreement`, `SecretKeyFactory`, `SSLContext`), post-quantum names |
 | Go | `crypto/rsa`, `ecdsa`, `ecdh`, `ed25519`, `aes`, `des`, `rc4`, hashes, `hmac`, `tls` versions and curves, `mlkem` |
 | TLS packet captures (`.pcap .pcapng .cap`) | The cipher suite and key-exchange group each session negotiated, rated per algorithm (encryption, hash, key exchange, authentication); ML-KEM hybrids such as X25519MLKEM768 are recognised. Unreadable captures are listed in the report metadata instead of failing the scan |
+| AWS inventory JSON | Any `.json` file with a `Keys` (KMS), `Certificates` (ACM) or `LoadBalancers` (ELB) list, whatever its name. KMS key specs and certificate key algorithms are rated by the catalog; TLS policies whose name contains `PQ` offer hybrid ML-KEM key exchange and are Safe, other `ELBSecurityPolicy-*` policies are classical and Critical. Plain HTTP listeners are skipped |
 
 Comments, minified bundles (`*.min.js`), type declarations (`*.d.ts`), and `node_modules`, `vendor`, `dist` and `build` directories are skipped. Findings in test files are tagged `test`, so they can be excluded. Files over 2 MB are skipped, and scanning stops after 50,000 files. The report records how many files were skipped either way.
 
@@ -124,6 +125,7 @@ pipeline/
   network_scanner.py   network report kind: TLS sessions in packet captures
   pcap_scanner.py      TLS hello parsing (scapy)
   translate_network_cbom.py / classify_network_cbom.py   IANA names, per-algorithm ratings
+  cloud_posture_scanner.py  cloud report kind: AWS KMS keys, ACM certificates, TLS policies
   walker.py            repository walk with skip rules and limits
   registry.py          report kinds; extensions register here
   analyze_source.py    runs every registered scanner on a folder
@@ -134,9 +136,9 @@ pipeline/
   export_cbom.py       CycloneDX export (per-kind exporters)
 server.py              API and static dashboard
 frontend/              dashboard (no build step); extension views in frontend/kinds/
-tests/<feature>/       tests grouped by feature: catalog, scanner, network, report,
+tests/<feature>/       tests grouped by feature: catalog, scanner, network, cloud, report,
                        storage, export, server, fixtures (unittest) and dashboard (node --test)
-test_data/             fixtures (js_crypto/, code/, network/), their generators/ and expected/ results
+test_data/             fixtures (js_crypto/, code/, network/, cloud/), their generators/ and expected/ results
 outputs/               generated reports and the dashboard database (gitignored)
 ```
 
@@ -174,7 +176,7 @@ Rule fields:
 | CBOM | `export_cbom.register_exporter(kind, exporter)` |
 | Dashboard | `registerReportKind(kind, config)` from a module in `frontend/kinds/`, imported by `frontend/app.mjs`, with optional `row`/`details` renderers |
 
-Network captures are added this way: `pipeline/network_scanner.py` registers the analysis, storage and CBOM hooks, and `frontend/kinds/network.mjs` the session view. Cloud inventories (AWS KMS, ACM and load balancers) follow on a separate branch.
+Network captures and cloud inventories (AWS KMS, ACM and load balancers) are added this way: `pipeline/network_scanner.py` and `pipeline/cloud_posture_scanner.py` register the analysis, storage and CBOM hooks, and `frontend/kinds/network.mjs` and `frontend/kinds/cloud.mjs` the views.
 
 ## Tests
 
