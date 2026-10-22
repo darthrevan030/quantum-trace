@@ -81,6 +81,7 @@ When a key size is hidden at the call site (`AES.new(key)`), the finding is rate
 | --- | --- |
 | JavaScript / TypeScript (`.js .mjs .cjs .jsx .ts .tsx .mts .cts`) | Node `crypto` (ciphers, hashes, HMAC, key pairs including multi-line `modulusLength`/`namedCurve` options, ECDH, DH, RSA encrypt, KDFs); WebCrypto `subtle`; TLS `minVersion`/`secureProtocol`/`ecdhCurve`; JWT/JOSE `alg`; crypto-js, node-forge, elliptic, @noble/curves, @noble/hashes, @noble/post-quantum, tweetnacl, libsodium, bcrypt, argon2, node-rsa; Mojaloop JWS (`JwsSigner`/`JwsValidator`, RS256/ES256) |
 | `package.json` | Known crypto libraries under `dependencies`, `devDependencies`, `peerDependencies`, `optionalDependencies`, `overrides` and `resolutions` |
+| `package-lock.json`, `npm-shrinkwrap.json` | Crypto libraries the lockfile resolves (lockfile v1, v2 and v3), including ones pulled in only transitively. Each transitive finding records the version and the chain that brings it in (`a > b > elliptic`) and is rated UNKNOWN, because a lockfile shows that a library ships, not that the code calls it. Direct dependencies are left to `package.json` when it sits beside the lockfile. Lockfiles up to 20 MiB are read |
 | Python | `cryptography`, PyCryptodome, `hashlib`, `hmac`, `ssl`, KDFs, bcrypt, PyJWT, post-quantum names |
 | Java / Kotlin | JCA `getInstance` calls (`KeyPairGenerator`, `Cipher`, `Signature`, `MessageDigest`, `Mac`, `KeyAgreement`, `SecretKeyFactory`, `SSLContext`), post-quantum names |
 | Go | `crypto/rsa`, `ecdsa`, `ecdh`, `ed25519`, `aes`, `des`, `rc4`, hashes, `hmac`, `tls` versions and curves, `mlkem` |
@@ -121,7 +122,7 @@ pipeline/
   crypto_catalog.py    every quantum-risk rating
   rules/*.json         detection rules, one file per language
   code_scanner.py      runs the rules over source files
-  manifest_scanner.py  crypto libraries in package.json
+  manifest_scanner.py  crypto libraries in package.json and package-lock.json
   network_scanner.py   network report kind: TLS sessions in packet captures
   pcap_scanner.py      TLS hello parsing (scapy)
   translate_network_cbom.py / classify_network_cbom.py   IANA names, per-algorithm ratings
