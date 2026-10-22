@@ -26,9 +26,9 @@ class JavaScriptRulesTest(unittest.TestCase):
         self.assertEqual(findings(self.report), {
             ("src/cipher.js", 3, "AES-128-CBC", "MEDIUM"),
             ("src/cipher.js", 4, "AES-256-GCM", "SAFE"),
-            ("src/cipher.js", 5, "3DES", "MEDIUM"),
+            ("src/cipher.js", 5, "3DES", "CRITICAL"),
             ("src/cipher.js", 6, "Cipher (runtime-selected)", "UNKNOWN"),
-            ("src/cipher.js", 7, "SHA-1", "MEDIUM"),
+            ("src/cipher.js", 7, "SHA-1", "CRITICAL"),
             ("src/cipher.js", 8, "HMAC-SHA-256", "SAFE"),
             ("src/keys.ts", 4, "RSA-4096", "CRITICAL"),
             ("src/keys.ts", 8, "EC P-256", "CRITICAL"),
@@ -42,7 +42,7 @@ class JavaScriptRulesTest(unittest.TestCase):
             ("src/jwt.js", 3, "JWT HS256", "SAFE"),
             ("src/jwt.js", 4, "JWT ES256", "CRITICAL"),
             ("src/jwt.js", 4, "JWT HS512", "SAFE"),
-            ("src/libs.js", 5, "3DES", "MEDIUM"),
+            ("src/libs.js", 5, "3DES", "CRITICAL"),
             ("src/libs.js", 6, "MD5", "CRITICAL"),
             ("src/libs.js", 7, "X25519", "CRITICAL"),
             ("src/libs.js", 8, "bcrypt", "SAFE"),
@@ -122,7 +122,7 @@ class JavaScriptRulesTest(unittest.TestCase):
     def test_metadata_summary(self):
         summary = self.report["metadata"]["quantumRiskSummary"]
         self.assertEqual(summary["totalFindings"], 31)
-        self.assertEqual(summary["riskCounts"], {"CRITICAL": 15, "HIGH": 0, "MEDIUM": 5, "LOW": 0, "SAFE": 9, "UNKNOWN": 2})
+        self.assertEqual(summary["riskCounts"], {"CRITICAL": 18, "HIGH": 0, "MEDIUM": 2, "LOW": 0, "SAFE": 9, "UNKNOWN": 2})
         self.assertIsInstance(summary["codeQuantumRiskScore"], str)
         self.assertTrue(summary["codeQuantumRiskScore"].endswith("%"))
 
@@ -133,7 +133,7 @@ class PortedRulesTest(unittest.TestCase):
         self.assertEqual(findings(report), {
             ("python/pqc_config.py", 2, "ML-KEM-768", "SAFE"),
             ("python/legacy/main.py", 6, "RSA-2048", "CRITICAL"),
-            ("python/legacy/main.py", 7, "SHA-1", "MEDIUM"),
+            ("python/legacy/main.py", 7, "SHA-1", "CRITICAL"),
             ("python/symmetric/main.py", 5, "AES", "MEDIUM"),
             ("java/LegacyCrypto.java", 8, "RSA", "CRITICAL"),
             ("java/LegacyCrypto.java", 9, "EC", "CRITICAL"),
@@ -163,8 +163,8 @@ class PortedRulesTest(unittest.TestCase):
                 ("a.py", 3, "TLSv1.2", "HIGH"),
                 ("B.java", 2, "RSA-3072", "CRITICAL"),
                 ("B.java", 4, "ECDSA", "CRITICAL"),
-                ("B.java", 5, "3DES", "MEDIUM"),
-                ("c.go", 2, "3DES", "MEDIUM"),
+                ("B.java", 5, "3DES", "CRITICAL"),
+                ("c.go", 2, "3DES", "CRITICAL"),
                 ("c.go", 2, "SHA-256", "SAFE"),
                 ("c.go", 2, "TLSv1.2", "HIGH"),
                 ("c.go", 4, "RSA-3072", "CRITICAL"),

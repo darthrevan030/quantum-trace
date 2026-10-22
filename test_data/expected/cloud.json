@@ -5,7 +5,8 @@
   "totalFindings": 10,
   "riskCounts": {
     "CRITICAL": 6,
-    "SAFE": 3,
+    "MEDIUM": 1,
+    "SAFE": 2,
     "UNKNOWN": 1
   },
   "findings": [
@@ -57,7 +58,7 @@
     {
       "source": "load_balancer_listeners.json",
       "name": "demo-edge:9443",
-      "risk": "SAFE"
+      "risk": "MEDIUM"
     }
   ]
 }

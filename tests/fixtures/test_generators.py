@@ -25,14 +25,14 @@ class CodeGeneratorTest(unittest.TestCase):
             saved = json.loads((Path(folder) / "code.json").read_text(encoding="utf-8"))
         self.assertEqual(saved, manifest)
         self.assertEqual(saved["fixture"], "code")
-        self.assertEqual(saved["riskCounts"], {"CRITICAL": 6, "MEDIUM": 4, "SAFE": 3})
+        self.assertEqual(saved["riskCounts"], {"CRITICAL": 7, "MEDIUM": 3, "SAFE": 3})
         self.assertEqual(saved["totalFindings"], 13)
-        self.assertIn({"source": "python/legacy/main.py", "name": "main.py:7", "risk": "MEDIUM"}, saved["findings"])
+        self.assertIn({"source": "python/legacy/main.py", "name": "main.py:7", "risk": "CRITICAL"}, saved["findings"])
 
     def test_changed_scanner_output_is_rejected_and_nothing_is_written(self):
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaisesRegex(SystemExit, "scanner output changed"):
-                verify("code", code.FIXTURE, {"CRITICAL": 7, "MEDIUM": 3, "SAFE": 3}, expected_dir=folder)
+                verify("code", code.FIXTURE, {"CRITICAL": 6, "MEDIUM": 4, "SAFE": 3}, expected_dir=folder)
             self.assertEqual(list(Path(folder).iterdir()), [])
 
     def test_missing_report_kind_names_the_branch_to_use(self):

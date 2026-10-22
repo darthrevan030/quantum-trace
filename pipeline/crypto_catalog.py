@@ -9,9 +9,15 @@ import re
 RISKS = ("CRITICAL", "HIGH", "MEDIUM", "LOW", "SAFE", "UNKNOWN")
 
 POLICY = {
-    "primary": "Hackathon challenge brief (not bundled in this repository)",
-    "keySizeReference": "pdfs/nist_standards.pdf",
-    "sha1Resolution": "SHA-1 is Medium per the challenge brief; the reference matrix instead rates it Critical.",
+    "primary": "NIST FIPS 203, 204 and 205 (post-quantum), SP 800-131A Rev. 2 (transitions), SP 800-57 Part 1 Rev. 5 (key sizes).",
+    "sha1Resolution": "SHA-1 is Critical: collisions are practical and SP 800-131A Rev. 2 disallows it for digital signatures. "
+    "HMAC-SHA-1 stays Medium because HMAC does not depend on collision resistance.",
+    "legacyCipherResolution": "3DES is Critical: SP 800-131A Rev. 2 disallows Triple DES encryption after 2023. Blowfish, CAST5 and IDEA "
+    "are High: not NIST approved, and their 64-bit blocks allow Sweet32 birthday attacks.",
+    "aes128Resolution": "AES-128 and AES-192 are Medium. This is stricter than NIST, which accepts them after Grover's algorithm "
+    "(SP 800-57); the policy asks for 256-bit keys for long-lived data, as CNSA 2.0 does.",
+    "urgency": "HNDL (harvest now, decrypt later) marks confidentiality at risk today from recorded traffic; "
+    "Forgery marks signatures, which are only attackable once a quantum computer exists and can be rotated.",
     "missingParameters": "Structured evidence with a missing key size or parameter set is UNKNOWN; "
     "a code call site that hides it is rated as the weakest variant the algorithm allows.",
 }
@@ -29,8 +35,10 @@ BROKEN = {
     "MD4": "Migrate to a SHA-256 or stronger hash-based construction.",
     "NONE": "Sign tokens with ML-DSA, or at minimum HMAC-SHA-256.",
 }
-# Legacy 64-bit-block ciphers, rated Medium by the challenge brief.
-LEGACY_SYMMETRIC = {"3DES", "Blowfish", "CAST5", "IDEA"}
+# Disallowed by NIST SP 800-131A Rev. 2 after 2023.
+DISALLOWED = {"3DES"}
+# Unapproved 64-bit-block ciphers, open to Sweet32.
+LEGACY_SYMMETRIC = {"Blowfish", "CAST5", "IDEA"}
 SYMMETRIC_SIZES = {
     "AES": (128, 192, 256),
     "Camellia": (128, 192, 256),
@@ -43,7 +51,7 @@ SYMMETRIC_SIZES = {
     "Rabbit": (128,),
 }
 HASHES = {
-    "SHA-1": "MEDIUM",
+    "SHA-1": "CRITICAL",
     "RIPEMD-160": "MEDIUM",
     "SHA-224": "LOW",
     "SHA3-224": "LOW",
@@ -256,8 +264,10 @@ def label(info):
     return name
 
 
-def finding(risk, threat, reason, suggestion=None, standard=None):
+def finding(risk, threat, reason, suggestion=None, standard=None, urgency=None):
     result = {"risk": risk, "threat": threat, "reason": reason}
+    if urgency:
+        result["urgency"] = urgency
     if suggestion:
         result["suggestion"] = suggestion
     if standard:
@@ -270,13 +280,13 @@ def _shor(algorithm, purpose):
     exchange = purpose in ("keyExchange", "encryption") or (purpose is None and algorithm in KEY_EXCHANGE_ONLY)
     if signing:
         return finding("CRITICAL", "Shor", "Vulnerable to Shor's algorithm regardless of key size.",
-                       "Migrate signatures to ML-DSA or SLH-DSA.", "FIPS 204 / 205")
+                       "Migrate signatures to ML-DSA or SLH-DSA.", "FIPS 204 / 205", "Forgery")
     if exchange:
         return finding("CRITICAL", "Shor", "Vulnerable to Shor's algorithm regardless of key size.",
-                       "Migrate key exchange to ML-KEM or a supported ML-KEM hybrid.", "FIPS 203")
+                       "Migrate key exchange to ML-KEM or a supported ML-KEM hybrid.", "FIPS 203", "HNDL")
     return finding("CRITICAL", "Shor", "Vulnerable to Shor's algorithm regardless of key size.",
                    "Migrate signatures to ML-DSA or SLH-DSA, and key exchange or encryption to ML-KEM.",
-                   "FIPS 203 / 204 / 205")
+                   "FIPS 203 / 204 / 205", "HNDL")
 
 
 def _symmetric(algorithm, bits, require_parameters):
@@ -291,10 +301,11 @@ def _symmetric(algorithm, bits, require_parameters):
         return finding("UNKNOWN", "Grover", f"{algorithm} key size is missing or invalid.")
     if bits >= 256:
         return finding("SAFE", "Grover",
-                       note + f"The matrix's generic quantum key-search model gives approximately {bits // 2}-bit security.",
+                       note + f"Grover's algorithm leaves approximately {bits // 2}-bit security.",
                        f"Keep {algorithm} with 256-bit keys.")
     return finding("MEDIUM", "Grover",
-                   note + f"The matrix's generic quantum key-search model gives approximately {bits // 2}-bit security.",
+                   note + f"Grover's algorithm leaves approximately {bits // 2}-bit security; NIST accepts this, "
+                   "but policy requires 256-bit keys for long-lived data.",
                    "Increase the encryption key size to 256 bits (e.g. AES-256).")
 
 
@@ -343,14 +354,21 @@ def classify(algorithm, key_bits=None, purpose=None, parameter_set=None, require
     if name in BROKEN:
         return finding("CRITICAL", "Classical", "Broken by classical cryptanalysis; no quantum computer is needed.",
                        BROKEN[name])
+    if name in DISALLOWED:
+        return finding("CRITICAL", "Classical",
+                       "NIST SP 800-131A Rev. 2 disallows Triple DES encryption after 2023; its 64-bit blocks also allow Sweet32 attacks.",
+                       "Migrate to AES-256 with an authenticated encryption mode.")
     if name in LEGACY_SYMMETRIC:
-        return finding("MEDIUM", "Grover / Classical", "Legacy 64-bit-block cipher rated Medium by the challenge brief.",
+        return finding("HIGH", "Classical", "Legacy 64-bit-block cipher that NIST does not approve; open to Sweet32 birthday attacks.",
                        "Migrate to AES-256 with an authenticated encryption mode.")
     if name == "SHA-1":
-        return finding("MEDIUM", "Grover / Classical",
-                       "SHA-1 is Medium under the challenge brief's quantum risk tiers. "
-                       "The reference matrix rates it Critical for classical collision weaknesses.",
+        return finding("CRITICAL", "Classical",
+                       "SHA-1 collisions are practical and NIST SP 800-131A Rev. 2 disallows it for digital signatures.",
                        "Migrate to a SHA-256 or stronger hash-based construction.")
+    if name == "HMAC-SHA-1":
+        return finding("MEDIUM", "Classical",
+                       "HMAC does not depend on collision resistance, so NIST still permits HMAC-SHA-1, but SHA-1 is being retired.",
+                       "Migrate to HMAC-SHA-256 or stronger.")
     if name in HASHES:
         risk = HASHES[name]
         return finding(risk, "Grover",
@@ -365,7 +383,8 @@ def classify(algorithm, key_bits=None, purpose=None, parameter_set=None, require
                        "Key derivation or password hashing; quantum search gives at most a quadratic speed-up on guessing.")
     if name in PROTOCOLS:
         risk, threat, reason = PROTOCOLS[name]
-        return finding(risk, threat, reason, "Require TLS 1.3 with an ML-KEM hybrid group (e.g. X25519MLKEM768).")
+        return finding(risk, threat, reason, "Require TLS 1.3 with an ML-KEM hybrid group (e.g. X25519MLKEM768).",
+                       urgency="HNDL" if threat == "Shor" else None)
     return finding("UNKNOWN", "Unknown", "Algorithm, parameters, or classification rule are unavailable.")
 
 
@@ -373,7 +392,7 @@ def default_purpose(algorithm):
     """The purpose an algorithm's family implies, or None when it can serve several (RSA, EC)."""
     info = normalize(algorithm)
     name = info["algorithm"] or algorithm
-    if name in SYMMETRIC_SIZES or name in LEGACY_SYMMETRIC or name in {"DES", "RC4", "RC2"}:
+    if name in SYMMETRIC_SIZES or name in LEGACY_SYMMETRIC or name in DISALLOWED or name in {"DES", "RC4", "RC2"}:
         return "encryption"
     if name in HASHES or name in {"MD5", "MD4"} or (isinstance(name, str) and name.startswith("HMAC-")):
         return "hash"

@@ -303,7 +303,7 @@ function showDetails(component, trigger) {
     const assessment = component.quantumRiskAssessment || {};
     const conclusion = element('section', '', 'risk-conclusion');
     const explanation = element('div');
-    explanation.append(element('h3', scannerAlgorithm(component)), element('p', `Scanner assessment · ${assessment.threat || 'Threat not recorded'}`));
+    explanation.append(element('h3', scannerAlgorithm(component)), element('p', `Scanner assessment · ${assessment.threat || 'Threat not recorded'}${assessment.urgency ? ` · ${assessment.urgency}` : ''}`));
     conclusion.append(explanation, badge(component));
     content.append(conclusion);
     appendDetails(content, {

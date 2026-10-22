@@ -1,7 +1,5 @@
 """Source-scoped SQLite storage, retaining the complete scanner evidence."""
 import json
-import os
-import shutil
 import sqlite3
 from contextlib import contextmanager
 
@@ -125,40 +123,13 @@ class SourceStore:
                     conn.execute(f"INSERT INTO {STORAGE[kind]['table']} ({','.join(values)}) VALUES ({','.join('?' for _ in values)})", tuple(values.values()))
             conn.execute("UPDATE analysis_source SET status='ready',error=NULL WHERE id=?", (source_id,))
 
-    def delete(self, source_id, base_dir="input_files"):
-        """Apaga a source da BD e limpa a sua pasta física em input_files/"""
+    def delete(self, source_id):
+        """Remove a source's rows; the caller removes its input directory."""
         with self.connect() as conn:
             for storage in STORAGE.values():
                 conn.execute(f"DELETE FROM {storage['table']} WHERE source_id=?", (source_id,))
             conn.execute("DELETE FROM source_report WHERE source_id=?", (source_id,))
             conn.execute("DELETE FROM analysis_source WHERE id=?", (source_id,))
-
-        # Remove a pasta associada no disco se existir
-        if os.path.exists(base_dir):
-            for entry in os.listdir(base_dir):
-                if entry.startswith(f"source_{source_id}"):
-                    target = os.path.join(base_dir, entry)
-                    if os.path.isdir(target):
-                        shutil.rmtree(target, ignore_errors=True)
-                    elif os.path.isfile(target):
-                        os.remove(target)
-
-    def reset_all(self, base_dir="input_files"):
-        """Limpa toda a base de dados e a pasta input_files para reiniciar o ambiente."""
-        with self.connect() as conn:
-            for storage in STORAGE.values():
-                conn.execute(f"DELETE FROM {storage['table']}")
-            conn.execute("DELETE FROM source_report")
-            conn.execute("DELETE FROM analysis_source")
-
-        if os.path.exists(base_dir):
-            for item in os.listdir(base_dir):
-                item_path = os.path.join(base_dir, item)
-                if item != ".gitkeep":
-                    if os.path.isdir(item_path):
-                        shutil.rmtree(item_path, ignore_errors=True)
-                    elif os.path.isfile(item_path):
-                        os.remove(item_path)
 
 
 def code_columns(component):

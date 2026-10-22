@@ -1,6 +1,6 @@
 import unittest
 
-from pipeline.crypto_catalog import RISKS, classify, classify_name, default_purpose, label, normalize
+from pipeline.crypto_catalog import POLICY, RISKS, classify, classify_name, default_purpose, label, normalize
 
 
 class NormalizeTest(unittest.TestCase):
@@ -81,6 +81,28 @@ class ClassifyTest(unittest.TestCase):
                     result = self.assertRisk("CRITICAL", algorithm, key_bits=bits)
                     self.assertEqual(result["threat"], "Shor")
 
+    def test_urgency_separates_harvest_now_from_forgery(self):
+        for algorithm, purpose, urgency in [
+            ("RSA", "signature", "Forgery"), ("RSA", "authentication", "Forgery"), ("ECDSA", None, "Forgery"),
+            ("Ed25519", None, "Forgery"), ("RSA", "keyExchange", "HNDL"), ("RSA", "encryption", "HNDL"),
+            ("X25519", None, "HNDL"), ("ECDH", None, "HNDL"),
+            # Unknown role: assume the stricter, recorded-traffic case.
+            ("RSA", None, "HNDL"), ("EC", None, "HNDL"),
+        ]:
+            with self.subTest(algorithm=algorithm, purpose=purpose):
+                self.assertEqual(classify(algorithm, purpose=purpose)["urgency"], urgency)
+        self.assertEqual(classify("TLSv1.2")["urgency"], "HNDL")
+
+    def test_urgency_only_where_shor_applies(self):
+        for algorithm in ["AES", "SHA-256", "ML-KEM", "MD5", "Kyber", "TLSv1", "X25519MLKEM768"]:
+            with self.subTest(algorithm=algorithm):
+                self.assertNotIn("urgency", classify(algorithm))
+
+    def test_policy_records_tier_choices_that_differ_from_nist(self):
+        self.assertIn("AES-128", POLICY["aes128Resolution"])
+        self.assertIn("stricter than NIST", POLICY["aes128Resolution"])
+        self.assertIn("CNSA 2.0", POLICY["aes128Resolution"])
+
     def test_signature_and_key_exchange_get_different_migrations(self):
         signing = classify("RSA", purpose="signature")
         exchange = classify("RSA", purpose="keyExchange")
@@ -111,10 +133,23 @@ class ClassifyTest(unittest.TestCase):
             with self.subTest(algorithm=algorithm):
                 self.assertRisk("CRITICAL", algorithm)
 
-    def test_policy_rated_legacy_primitives(self):
-        for algorithm in ["SHA-1", "3DES", "Blowfish"]:
+    def test_nist_disallowed_primitives_are_critical(self):
+        # SP 800-131A Rev. 2: SHA-1 for signatures and TDEA encryption are disallowed.
+        for algorithm in ["SHA-1", "3DES"]:
             with self.subTest(algorithm=algorithm):
-                self.assertRisk("MEDIUM", algorithm)
+                result = self.assertRisk("CRITICAL", algorithm)
+                self.assertEqual(result["threat"], "Classical")
+                self.assertIn("800-131A", result["reason"])
+
+    def test_unapproved_64_bit_block_ciphers_are_high(self):
+        for algorithm in ["Blowfish", "CAST5", "IDEA"]:
+            with self.subTest(algorithm=algorithm):
+                self.assertRisk("HIGH", algorithm)
+
+    def test_hmac_sha1_stays_medium_because_hmac_needs_no_collision_resistance(self):
+        result = self.assertRisk("MEDIUM", "HMAC-SHA-1")
+        self.assertIn("collision", result["reason"])
+        self.assertRisk("CRITICAL", "SHA-1")
 
     def test_hashes_and_kdfs(self):
         for algorithm in ["SHA-256", "SHA-384", "SHA-512", "SHA3-256", "BLAKE2b", "HMAC-SHA-256", "PBKDF2", "scrypt", "Argon2", "bcrypt", "HKDF"]:
@@ -148,15 +183,12 @@ class ClassifyTest(unittest.TestCase):
         self.assertEqual(default_purpose("Dilithium3"), "signature")
         self.assertEqual(default_purpose("SPHINCS+"), "signature")
 
-    def test_policy_documents_exist(self):
-        from pathlib import Path
-        from pipeline.crypto_catalog import POLICY
-
-        documents = [value for value in POLICY.values() if value.endswith(".pdf")]
-        self.assertTrue(documents)
-        for document in documents:
-            with self.subTest(document=document):
-                self.assertTrue((Path(__file__).resolve().parents[2] / document).is_file())
+    def test_policy_cites_nist_publications_only(self):
+        text = " ".join(POLICY.values())
+        for publication in ["FIPS 203", "SP 800-131A", "SP 800-57"]:
+            self.assertIn(publication, text)
+        for forbidden in ["hackathon", "brief", "matrix", ".pdf"]:
+            self.assertNotIn(forbidden, text.lower())
 
     def test_protocol_versions(self):
         for version in ["SSLv3", "TLSv1", "TLSv1.1"]:
@@ -172,7 +204,7 @@ class ClassifyTest(unittest.TestCase):
     def test_sha1_rating_is_identical_whatever_the_spelling(self):
         # One catalog means one answer: code and network can no longer disagree.
         risks = {classify_name(name)["risk"] for name in ["sha1", "SHA-1", "SHA1", "sha-1"]}
-        self.assertEqual(risks, {"MEDIUM"})
+        self.assertEqual(risks, {"CRITICAL"})
 
 
 class DefaultPurposeTest(unittest.TestCase):

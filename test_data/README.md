@@ -51,7 +51,7 @@ Synthetic combined inventory exports in the shape the cloud scanner reads, not r
 | --- | --- | --- |
 | `kms_key_inventory.json` | RSA and elliptic-curve signing keys, an AES-256 storage key, a key with no key spec, an ML-DSA-65 signing key | 2 Critical, 2 Safe, 1 Unknown |
 | `acm_certificates.json` | RSA and elliptic-curve certificates | 2 Critical |
-| `load_balancer_listeners.json` | A classical TLS 1.3 policy, a legacy policy, a post-quantum (`PQ`) policy, and a plain HTTP listener that is skipped | 2 Critical, 1 Safe |
+| `load_balancer_listeners.json` | A classical TLS 1.3 policy, a legacy policy, a post-quantum (`PQ`) policy, and a plain HTTP listener that is skipped | 2 Critical, 1 Medium |
 
 `expected/cloud.json` lists each asset.
 

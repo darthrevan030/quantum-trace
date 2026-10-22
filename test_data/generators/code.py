@@ -6,7 +6,7 @@ Run from the repository root: uv run python -m test_data.generators.code
 from test_data.generators.common import TEST_DATA, verify, write
 
 FIXTURE = TEST_DATA / "code"
-EXPECTED_COUNTS = {"CRITICAL": 6, "MEDIUM": 4, "SAFE": 3}
+EXPECTED_COUNTS = {"CRITICAL": 7, "MEDIUM": 3, "SAFE": 3}
 
 FILES = {
     'python/legacy/main.py': '''

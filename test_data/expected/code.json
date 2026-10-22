@@ -4,8 +4,8 @@
   "fixture": "code",
   "totalFindings": 13,
   "riskCounts": {
-    "CRITICAL": 6,
-    "MEDIUM": 4,
+    "CRITICAL": 7,
+    "MEDIUM": 3,
     "SAFE": 3
   },
   "findings": [
@@ -62,7 +62,7 @@
     {
       "source": "python/legacy/main.py",
       "name": "main.py:7",
-      "risk": "MEDIUM"
+      "risk": "CRITICAL"
     },
     {
       "source": "python/pqc_config.py",

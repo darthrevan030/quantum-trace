@@ -150,7 +150,7 @@ def export_cbom(source):
             assessment = finding.get("quantumRiskAssessment", {})
             component.setdefault("properties", []).extend(properties({
                 "report:kind": kind, "risk:tier": finding.get("risk", assessment.get("tier")),
-                "risk:reason": assessment.get("reason"), "risk:threat": assessment.get("threat"),
+                "risk:reason": assessment.get("reason"), "risk:threat": assessment.get("threat"), "risk:urgency": assessment.get("urgency"),
                 "risk:suggestion": assessment.get("suggestion"), "scanner:finding": finding,
             }))
             roots.append(ref)

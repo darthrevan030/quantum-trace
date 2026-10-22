@@ -163,6 +163,7 @@ def scan_file(path, relative, ruleset, language):
 
 
 def summarize(components, scanned_files, languages):
+    # The score weights (1.0 / 0.7 / 0.4) are a presentation heuristic, not a standard; the risk counts are the evidence.
     counts = Counter(c["quantumRiskAssessment"]["tier"] for c in components)
     total = len(components)
     score = round((counts["CRITICAL"] + 0.7 * counts["HIGH"] + 0.4 * counts["MEDIUM"]) / max(total, 1) * 100, 2)

@@ -25,6 +25,8 @@ def _assessment(result, reason=None, suggestion=None):
         assessment["suggestion"] = suggestion or result["suggestion"]
     if result.get("nistStandard"):
         assessment["nistStandard"] = result["nistStandard"]
+    if result.get("urgency"):
+        assessment["urgency"] = result["urgency"]
     return assessment
 
 
@@ -66,8 +68,11 @@ def rate_policy(policy):
     if not isinstance(policy, str) or not policy.strip():
         return _unknown("No TLS policy recorded for this listener.")
     if re.search(r"(^|-)PQ(-|$)", policy, re.IGNORECASE):
-        return _assessment(classify("X25519MLKEM768", purpose="keyExchange"),
-                           f"{policy} offers hybrid ML-KEM key exchange (post-quantum TLS policy).")
+        # Offering a hybrid group does not stop a client from negotiating a classical one.
+        return _assessment({**classify("X25519MLKEM768", purpose="keyExchange"), "risk": "MEDIUM", "threat": "Shor", "urgency": "HNDL"},
+                           f"{policy} offers hybrid ML-KEM key exchange, but it still accepts classical key exchange from clients "
+                           "that do not support it, so recorded sessions may remain breakable.",
+                           "Confirm clients negotiate X25519MLKEM768, then retire classical groups where the policy allows.")
     if policy.startswith("ELBSecurityPolicy"):
         return _assessment(classify("ECDH", purpose="keyExchange"),
                            f"{policy} negotiates only classical (EC)DHE key exchange, which Shor's algorithm breaks; "

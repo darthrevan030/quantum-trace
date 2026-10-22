@@ -59,6 +59,15 @@ class CbomTest(unittest.TestCase):
                 self.assertNotIn('nistQuantumSecurityLevel', crypto['algorithmProperties'])
         self.assertEqual(bom['compositions'][0]['aggregate'], 'unknown')
 
+    def test_urgency_is_exported_only_for_shor_findings(self):
+        bom = export_cbom(source())
+        urgencies = {}
+        for component in bom['components']:
+            props = {p['name']: p['value'] for p in component['properties']}
+            urgencies[props['quantumtrace:risk:tier'], props['quantumtrace:risk:threat']] = props.get('quantumtrace:risk:urgency')
+        self.assertIn(urgencies[('CRITICAL', 'Shor')], {'HNDL', 'Forgery'})
+        self.assertIsNone(urgencies[('SAFE', 'None')])
+
     def test_kind_without_exporter_is_kept_as_generic_asset(self):
         saved = {**source(), 'reports': {'extension': {'components': [{'name': 'kept', 'source': 'x.cfg'}]}}}
         component = export_cbom(saved)['components'][0]

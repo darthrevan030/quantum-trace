@@ -64,14 +64,14 @@ Scanners only *detect* algorithms. One catalog, [pipeline/crypto_catalog.py](pip
 
 | Risk | Meaning | Examples |
 | --- | --- | --- |
-| CRITICAL | Broken by Shor's algorithm, or already broken classically | RSA, ECDSA, ECDH, Ed25519, X25519, DH, DSA, MD5, DES, RC4, TLS 1.0/1.1, JWT `none` |
-| HIGH | Blocks post-quantum key exchange | TLS 1.2 |
-| MEDIUM | Weakened by Grover's algorithm, or legacy | AES-128/192, SHA-1, 3DES, Blowfish |
+| CRITICAL | Broken by Shor's algorithm, broken classically, or disallowed by NIST | RSA, ECDSA, ECDH, Ed25519, X25519, DH, DSA, SHA-1, MD5, 3DES, DES, RC4, TLS 1.0/1.1, JWT `none` |
+| HIGH | Blocks post-quantum key exchange, or unapproved legacy | TLS 1.2, Blowfish, CAST5, IDEA |
+| MEDIUM | Weakened by Grover's algorithm, or pre-standard | AES-128/192, HMAC-SHA-1, Kyber, Dilithium, SPHINCS+ |
 | LOW | Slightly short security margin | SHA-224 |
 | SAFE | Resists known quantum attacks | AES-256, ChaCha20, SHA-256+, SHA-3, HMAC-SHA-256, Argon2, ML-KEM, ML-DSA, SLH-DSA, X25519MLKEM768 |
 | UNKNOWN | Not enough evidence to rate | A cipher chosen at runtime, a crypto library with no visible usage |
 
-Ratings follow the challenge brief and NIST guidance in [pdfs/](pdfs/). Contested choices, such as SHA-1 being MEDIUM, are recorded in `POLICY` in the catalog.
+Ratings follow NIST FIPS 203/204/205, SP 800-131A Rev. 2 and SP 800-57, or are stricter. Where the policy is stricter than NIST (AES-128/192 are MEDIUM although NIST accepts them), `POLICY` in the catalog says so.
 
 When a key size is hidden at the call site (`AES.new(key)`), the finding is rated as the weakest size that algorithm allows (AES → AES-128 → MEDIUM). The report says so, so the size can be checked.
 
@@ -85,7 +85,7 @@ When a key size is hidden at the call site (`AES.new(key)`), the finding is rate
 | Java / Kotlin | JCA `getInstance` calls (`KeyPairGenerator`, `Cipher`, `Signature`, `MessageDigest`, `Mac`, `KeyAgreement`, `SecretKeyFactory`, `SSLContext`), post-quantum names |
 | Go | `crypto/rsa`, `ecdsa`, `ecdh`, `ed25519`, `aes`, `des`, `rc4`, hashes, `hmac`, `tls` versions and curves, `mlkem` |
 | TLS packet captures (`.pcap .pcapng .cap`) | The cipher suite and key-exchange group each session negotiated, rated per algorithm (encryption, hash, key exchange, authentication); ML-KEM hybrids such as X25519MLKEM768 are recognised. Unreadable captures are listed in the report metadata instead of failing the scan |
-| AWS inventory JSON | Any `.json` file with a `Keys` (KMS), `Certificates` (ACM) or `LoadBalancers` (ELB) list, whatever its name. KMS key specs and certificate key algorithms are rated by the catalog; TLS policies whose name contains `PQ` offer hybrid ML-KEM key exchange and are Safe, other `ELBSecurityPolicy-*` policies are classical and Critical. Plain HTTP listeners are skipped |
+| AWS inventory JSON | Any `.json` file with a `Keys` (KMS), `Certificates` (ACM) or `LoadBalancers` (ELB) list, whatever its name. KMS key specs and certificate key algorithms are rated by the catalog; TLS policies whose name contains `PQ` offer hybrid ML-KEM key exchange but still accept classical clients, so they are Medium; other `ELBSecurityPolicy-*` policies are classical and Critical. Plain HTTP listeners are skipped |
 
 Comments, minified bundles (`*.min.js`), type declarations (`*.d.ts`), and `node_modules`, `vendor`, `dist` and `build` directories are skipped. Findings in test files are tagged `test`, so they can be excluded. Files over 2 MB are skipped, and scanning stops after 50,000 files. The report records how many files were skipped either way.
 

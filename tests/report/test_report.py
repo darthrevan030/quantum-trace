@@ -107,6 +107,17 @@ class MarkdownTest(unittest.TestCase):
         self.assertIn("## What this report does not cover", markdown)
         self.assertIn("not proof", markdown)
 
+    def test_urgency_is_shown_only_when_recorded(self):
+        reports = {"code": {"components": [
+            component("a.js", 1, "RSA-2048", "CRITICAL", urgency="HNDL"),
+            component("a.js", 2, "RSA-2048", "CRITICAL", urgency="Forgery"),
+            component("a.js", 3, "AES-256-GCM", "SAFE"),
+        ]}}
+        markdown = to_markdown({**summarize(reports), "verdict": NOT_SAFE, "verdictDescription": "x"}, reports, "r")
+        self.assertIn("- **CRITICAL** (HNDL) line 1: RSA-2048", markdown)
+        self.assertIn("- **CRITICAL** (Forgery) line 2: RSA-2048", markdown)
+        self.assertIn("- **SAFE** line 3: AES-256-GCM", markdown)
+
     def test_pipes_and_backticks_cannot_break_tables(self):
         reports = {"code": {"components": [component("a.js", 1, "weird|`name`", "UNKNOWN")]}}
         summary = {**summarize(reports), "verdict": NOT_SAFE, "verdictDescription": ""}

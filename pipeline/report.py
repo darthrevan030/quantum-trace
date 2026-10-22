@@ -148,7 +148,8 @@ def to_markdown(summary, reports, title, include_tests=True):
             detail = assessment.get("suggestion") or assessment.get("reason") or ""
             standard = f" ({assessment['nistStandard']})" if assessment.get("nistStandard") else ""
             snippet = f" `{_cell(component['codeSnippet'])}`" if component.get("codeSnippet") else ""
-            lines.append(f"- **{risk_of(component)}** {where}: {_cell(algorithm_of(component))}{snippet}. {_cell(detail)}{standard}")
+            urgency = f" ({_cell(assessment['urgency'])})" if assessment.get("urgency") else ""
+            lines.append(f"- **{risk_of(component)}**{urgency} {where}: {_cell(algorithm_of(component))}{snippet}. {_cell(detail)}{standard}")
     if not by_file:
         lines += ["", "No findings."]
     lines += ["", "## What this report does not cover", "", *(f"- {caveat}" for caveat in CAVEATS), ""]

@@ -51,9 +51,9 @@ class RatingTest(unittest.TestCase):
 
     def test_tls_policies(self):
         for policy, tier in [
-            # Previously every TLS13 policy was Critical, including the post-quantum ones.
-            ("ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09", "SAFE"),
-            ("ELBSecurityPolicy-TLS13-1-3-PQ-2025-09", "SAFE"),
+            # A PQ policy offers hybrid ML-KEM but still accepts classical clients, so it is not Safe.
+            ("ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09", "MEDIUM"),
+            ("ELBSecurityPolicy-TLS13-1-3-PQ-2025-09", "MEDIUM"),
             ("ELBSecurityPolicy-TLS13-1-2-2021-06", "CRITICAL"),
             ("ELBSecurityPolicy-2016-08", "CRITICAL"),
             ("custom-policy", "UNKNOWN"),
@@ -63,6 +63,11 @@ class RatingTest(unittest.TestCase):
                 result = rate_policy(policy)
                 self.assertEqual(result["tier"], tier, result)
         self.assertIn("ELBSecurityPolicy-2016-08", rate_policy("ELBSecurityPolicy-2016-08")["reason"])
+        self.assertIn("classical", rate_policy("ELBSecurityPolicy-TLS13-1-3-PQ-2025-09")["reason"])
+        self.assertEqual(rate_policy("ELBSecurityPolicy-2016-08")["urgency"], "HNDL")
+        self.assertEqual(rate_policy("ELBSecurityPolicy-TLS13-1-3-PQ-2025-09")["urgency"], "HNDL")
+        self.assertEqual(rate_kms_key("RSA_2048", "SIGN_VERIFY")["urgency"], "Forgery")
+        self.assertEqual(rate_certificate("RSA_2048")["urgency"], "Forgery")
 
 
 class AnalysisTest(unittest.TestCase):
@@ -70,7 +75,7 @@ class AnalysisTest(unittest.TestCase):
         reports = run_scanners(FIXTURE)
         self.assertEqual(set(reports), {"cloud"})
         cloud = reports["cloud"]
-        self.assertEqual(tiers(cloud), {"CRITICAL": 6, "SAFE": 3, "UNKNOWN": 1})
+        self.assertEqual(tiers(cloud), {"CRITICAL": 6, "MEDIUM": 1, "SAFE": 2, "UNKNOWN": 1})
         self.assertEqual({c["type"] for c in cloud["components"]}, {"cloud-kms-key", "x509-certificate", "load-balancer-listener"})
         self.assertEqual({c["source"] for c in cloud["components"]},
                          {"kms_key_inventory.json", "acm_certificates.json", "load_balancer_listeners.json"})

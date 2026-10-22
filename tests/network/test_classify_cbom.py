@@ -36,6 +36,15 @@ class ClassificationTest(unittest.TestCase):
                 "CRITICAL",
             )
 
+    def test_urgency_survives_classification(self):
+        self.assertEqual(
+            primitive_risk({"algorithm": "RSA"}, "keyExchange")["urgency"], "HNDL"
+        )
+        self.assertEqual(
+            primitive_risk({"algorithm": "RSA"}, "authentication")["urgency"], "Forgery"
+        )
+        self.assertNotIn("urgency", primitive_risk({"algorithm": "AES", "keySizeBits": 256}, "encryption"))
+
     def test_hybrid_risk_excludes_missing_authentication(self):
         result = classify_session(session("TLS_AES_256_GCM_SHA384", "X25519MLKEM768"))
         self.assertEqual(result["encryptionAndKeyExchangeRisk"], "SAFE")
@@ -119,11 +128,18 @@ class ClassificationTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             classify_session({"cipherSuite": "4866"})
 
-    def test_brief_medium_algorithms_and_inline_hybrid(self):
+    def test_nist_disallowed_algorithms_and_inline_hybrid(self):
         for algorithm in ("SHA-1", "3DES"):
             self.assertEqual(
-                primitive_risk({"algorithm": algorithm}, "hash")["risk"], "MEDIUM"
+                primitive_risk({"algorithm": algorithm}, "hash")["risk"], "CRITICAL"
             )
+        # A TLS "_SHA" suffix is HMAC-SHA-1, which NIST still permits.
+        hmac_sha1 = {"algorithm": "SHA-1", "role": "HMAC hash"}
+        self.assertEqual(primitive_risk(hmac_sha1, "hash")["risk"], "MEDIUM")
+        self.assertEqual(
+            primitive_risk({"algorithm": "SHA-1", "role": "PRF hash"}, "hash")["risk"],
+            "CRITICAL",
+        )
         properties = session("TLS_AES_256_GCM_SHA384", "X25519MLKEM768")
         classified = classify_cbom(
             {

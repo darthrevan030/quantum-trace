@@ -1,4 +1,4 @@
-"""Classify a structured, readable network CBOM using the hackathon risk matrix."""
+"""Classify a structured, readable network CBOM with the shared crypto catalog."""
 
 import argparse
 import json
@@ -12,8 +12,10 @@ from pipeline.crypto_catalog import MLKEM_GROUPS, POLICY, classify
 NOT_RECORDED = {"", "none", "not recorded", "not determined", "negotiated separately"}
 
 
-def finding(risk, reason, suggestion=None, standard=None):
+def finding(risk, reason, suggestion=None, standard=None, urgency=None):
     result = {"risk": risk, "reason": reason}
+    if urgency:
+        result["urgency"] = urgency
     if suggestion:
         result["suggestion"] = suggestion
     if standard:
@@ -26,13 +28,17 @@ def primitive_risk(details, purpose):
     # "None" here means the capture recorded no algorithm, not the JWT "none" algorithm.
     if not isinstance(algorithm, str) or algorithm.strip().lower() in NOT_RECORDED:
         return finding("UNKNOWN", "Algorithm, parameters, or classification rule are unavailable.")
+    # A TLS "_SHA" suffix is the record MAC: HMAC-SHA-1 is rated differently from a bare SHA-1 digest.
+    if details.get("role") == "HMAC hash":
+        algorithm = f"HMAC-{algorithm}"
     # Structured evidence: a missing key size or parameter set is a gap, so it stays UNKNOWN.
     parts = [
         classify(part.strip(), details.get("keySizeBits"), purpose, details.get("parameterSet"), require_parameters=True)
         for part in algorithm.split(" + ")
     ]
     result = parts[0] if len(parts) == 1 else {**parts[0], "risk": combined_risk(parts)}
-    return finding(result["risk"], result["reason"], result.get("suggestion"), result.get("nistStandard"))
+    return finding(result["risk"], result["reason"], result.get("suggestion"), result.get("nistStandard"),
+                   result.get("urgency"))
 
 
 def combined_risk(findings):

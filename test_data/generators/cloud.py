@@ -8,7 +8,7 @@ import json
 from test_data.generators.common import TEST_DATA, verify, write
 
 FIXTURE = TEST_DATA / "cloud"
-EXPECTED_COUNTS = {"CRITICAL": 6, "SAFE": 3, "UNKNOWN": 1}
+EXPECTED_COUNTS = {"CRITICAL": 6, "MEDIUM": 1, "SAFE": 2, "UNKNOWN": 1}
 ACCOUNT, REGION = '123456789012', 'eu-west-1'
 
 
